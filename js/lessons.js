@@ -47,7 +47,7 @@ export const LECONS = [
     ['Dis le rythme à voix haute : « boum, boum-tchak, tchak-boum-tchak ».']),
   L('l07', 1, 'Chanter et jouer : la comptine', 'Garder la main droite pendant qu\'on chante.',
     `<p>Choisis une chanson très simple que tu connais par cœur. D'abord, joue seulement le premier temps de chaque mesure en chantant. Quand ça tourne, reviens au grattage en noires.</p>
-     <p>Astuce : dans <b>Morceaux</b>, colle les paroles de ta chanson dans « Mes paroles » : elles défilent sous les accords.</p>`,
+`,
     { bpm:84, mesure:'4/4', style:'noires', sections:[{ nom:'Comptine', mesures:'C | C G | C | G C', rep:2 }] },
     ['La main droite doit devenir automatique : c\'est elle qui tient le tempo, pas la voix.']),
 
@@ -120,7 +120,7 @@ export const LECONS = [
     { bpm:92, mesure:'4/4', style:'croches', sections:[{ nom:'Grille', mesures:'Am | G | F | E', rep:2 }],
       grilles:{ guitare:'Am | G | Fmaj7 | E' } }),
   L('l24', 4, 'Ton propre accompagnement', 'Composer une grille et chanter dessus.',
-    `<p>Ouvre l'<b>Atelier</b> : écris ta grille (ex. « C | G | Am | F »), choisis le style et le tempo, colle tes paroles. Tu as ton propre accompagnement.</p>`,
+    `<p>Ouvre l'<b>Atelier</b> : écris ta grille (ex. « C | G | Am | F »), choisis le style et le tempo. Tu as ton propre accompagnement.</p>`,
     { bpm:84, mesure:'4/4', style:'folk', sections:[{ nom:'Exemple', mesures:'C | Em | F | G', rep:2 }],
       grilles:{ guitare:'C | Em | Fmaj7 | G' } })
 ];

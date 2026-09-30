@@ -98,14 +98,13 @@ export function lireGrille(texte){
   return texte.split('|').map(m => m.trim()).filter(m => m.length).map(m => m.split(/\s+/));
 }
 
-/* Compile des sections [{ nom, mesures:'C | G', paroles:'… | …', rep }] en mesures à plat.
- * Renvoie { mesures:[{ accords:[{nom, pas}], texte, section, numero }], sections:[{nom, debut, fin}] } */
+/* Compile des sections [{ nom, mesures:'C | G', rep }] en mesures à plat.
+ * Renvoie { mesures:[{ accords:[{nom, pas}], section, numero }], sections:[{nom, debut, fin}] } */
 export function compilerSections(sections, mesureId){
   const pas = pasParMesure(mesureId);
   const out = [], plages = [];
   sections.forEach((sec, si) => {
     const grille = lireGrille(sec.mesures);
-    const textes = (sec.paroles || '').split('|').map(t => t.trim());
     const debut = out.length;
     const tours = sec.rep || 1;
     for (let r = 0; r < tours; r++){
@@ -113,7 +112,6 @@ export function compilerSections(sections, mesureId){
         const n = accords.length;
         out.push({
           accords:accords.map((nom, k) => ({ nom, pas:Math.round(k * pas / n) })),
-          texte:textes[i] || '',
           section:si, numero:i, tour:r
         });
       });

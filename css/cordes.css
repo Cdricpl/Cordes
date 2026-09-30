@@ -4,9 +4,8 @@
    ===================================================================== */
 .logo-img{width:36px;height:36px;display:block;filter:drop-shadow(0 3px 6px rgba(245,66,108,.25))}
 
-/* ====== accueil : 4 colonnes, « Chanter » en large ====== */
-.accueil-grille.cordes{grid-template-columns:1.25fr 1fr 1fr 1fr;grid-template-rows:1fr 1fr}
-.accueil-grille.cordes .c-morceaux{grid-column:span 2}
+/* ====== accueil : Parcours en grand, quatre cartes à côté ====== */
+.accueil-grille.cordes{grid-template-columns:1.25fr 1fr 1fr;grid-template-rows:1fr 1fr}
 .c-atelier{--c1:#fbbf24;--c2:#e8590c}
 
 /* ====== choix de l'instrument ====== */
@@ -45,14 +44,11 @@
 .g-accords b{font:800 26px/1 var(--f-titre);letter-spacing:.02em;color:var(--encre)}
 .g-mesure.double .g-accords{justify-content:space-between}
 .g-mesure.double .g-accords b{font-size:22px}
-.g-paroles{font-size:14px;line-height:1.3;color:var(--encre-2);min-height:1.3em}
-.avec-paroles .g-mesures{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
 .g-temps{position:absolute;left:10px;right:10px;bottom:6px;display:flex;gap:4px}
 .g-temps i{flex:1;height:3px;border-radius:2px;background:var(--surface-3)}
 .g-prog{position:absolute;left:0;bottom:0;height:5px;width:var(--prog,0%);background:linear-gradient(90deg,var(--ton-1),var(--ton-2));opacity:0}
 .g-mesure.actif{box-shadow:inset 0 0 0 2.5px var(--ton-2), 0 10px 22px -12px rgba(245,66,108,.6);transform:translateY(-1px);background:#fff6f8}
 .g-mesure.actif .g-accords b{color:var(--ton-texte)}
-.g-mesure.actif .g-paroles{color:var(--encre);font-weight:700}
 .g-mesure.actif .g-prog{opacity:1}
 
 .diag-zone{display:flex;flex-direction:column;gap:10px;min-height:0}
@@ -157,8 +153,6 @@
 @container appli (max-width:700px){
   .partition-zone.jeu-cordes{grid-template-columns:minmax(0,1fr) 120px}
   .diag-suivant{display:none}
-  .accueil-grille.cordes{grid-template-columns:1.2fr 1fr 1fr}
-  .accueil-grille.cordes .c-morceaux{grid-column:auto}
 }
 
 /* barre « main droite » : le motif de grattage ou d'arpège, qui s'allume en direct */

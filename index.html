@@ -77,10 +77,6 @@
         <svg class="ico" aria-hidden="true"><use href="#i-play"/></svg><span id="cta-texte">Commencer</span>
       </a>
     </div>
-    <a class="carte-cat c-morceaux" href="#/morceaux">
-      <div class="cat-illus" id="illus-morceaux"></div>
-      <div class="cat-texte"><h2>Chanter</h2><p id="compte-morceaux"></p></div>
-    </a>
     <a class="carte-cat c-rythmes" href="#/accords">
       <div class="cat-illus" id="illus-accords"></div>
       <div class="cat-texte"><h2>Accords</h2><p id="compte-accords"></p></div>
@@ -95,7 +91,7 @@
     </a>
     <a class="carte-cat c-atelier" href="#/jouer/atelier/perso">
       <div class="cat-illus" id="illus-atelier"></div>
-      <div class="cat-texte"><h2>Atelier</h2><p>Ta grille, tes paroles.</p></div>
+      <div class="cat-texte"><h2>Atelier</h2><p>Écris ta grille, joue par-dessus.</p></div>
     </a>
   </div>
 </section>
@@ -164,7 +160,7 @@
         <button class="statut-btn travail" id="st-travail" type="button" aria-pressed="false" title="À travailler"><svg class="ico" aria-hidden="true"><use href="#i-drapeau"/></svg><span>À travailler</span></button>
         <button class="statut-btn acquis" id="st-acquis" type="button" aria-pressed="false" title="Acquis"><svg class="ico" aria-hidden="true"><use href="#i-coche"/></svg><span>Acquis</span></button>
       </div>
-      <button class="rond" id="j-paroles" type="button" aria-label="Mes paroles" title="Mes paroles"><svg class="ico" aria-hidden="true"><use href="#i-texte"/></svg></button>
+      <button class="rond" id="j-grille" type="button" aria-label="Ma grille" title="Ma grille"><svg class="ico" aria-hidden="true"><use href="#i-texte"/></svg></button>
       <button class="rond" id="j-aide" type="button" aria-label="Explications"><svg class="ico" aria-hidden="true"><use href="#i-aide"/></svg></button>
       <button class="rond" id="j-reglages" type="button" aria-label="Réglages"><svg class="ico" aria-hidden="true"><use href="#i-reglages"/></svg></button>
     </div>
@@ -211,20 +207,19 @@
   </header>
   <div class="volet-corps">
     <div id="aide-corps" class="texte"></div>
-    <h3>Les accords du morceau</h3>
+    <h3>Les accords de la grille</h3>
     <div id="aide-accords" class="schemas"></div>
     <p class="muted small">Touche un schéma pour entendre l'accord.</p>
   </div>
 </aside>
 
-<aside class="volet" id="volet-paroles" hidden role="dialog" aria-modal="true" aria-labelledby="paroles-titre">
+<aside class="volet" id="volet-grille" hidden role="dialog" aria-modal="true" aria-labelledby="grille-titre">
   <header class="volet-tete">
-    <h2 id="paroles-titre">Mes paroles</h2>
+    <h2 id="grille-titre">Ma grille</h2>
     <button class="rond petit" type="button" data-fermer aria-label="Fermer"><svg class="ico" aria-hidden="true"><use href="#i-fermer"/></svg></button>
   </header>
   <div class="volet-corps">
-    <div id="atelier-grille" hidden>
-      <h3>Ma grille</h3>
+    <div id="atelier-grille">
       <p class="muted small">Une barre « | » sépare les mesures. Deux accords dans une mesure se la partagent. Une ligne par section, « Refrain: » pour la nommer.</p>
       <textarea id="atelier-texte" class="zone-texte" rows="5" spellcheck="false" aria-label="Grille d'accords"></textarea>
       <label class="ligne-reglage"><span>Mesure</span>
@@ -232,13 +227,6 @@
       </label>
       <div class="rang-boutons"><button class="btn-plat accent" id="atelier-appliquer" type="button">Appliquer</button></div>
       <p class="muted small" id="atelier-erreur" role="alert"></p>
-    </div>
-    <h3>Paroles</h3>
-    <p class="muted small">Colle les paroles de la chanson : une ligne par mesure, elles s'affichent sous les accords et défilent avec la musique. Une ligne vide = une mesure sans paroles. Elles restent sur cet appareil.</p>
-    <textarea id="paroles-texte" class="zone-texte" rows="14" aria-label="Paroles, une ligne par mesure"></textarea>
-    <div class="rang-boutons">
-      <button class="btn-plat accent" id="paroles-ok" type="button">Enregistrer</button>
-      <button class="btn-plat" id="paroles-effacer" type="button">Effacer</button>
     </div>
   </div>
 </aside>

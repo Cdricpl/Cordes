@@ -777,9 +777,8 @@ kbd{
    ===================================================================== */
 .logo-img{width:36px;height:36px;display:block;filter:drop-shadow(0 3px 6px rgba(245,66,108,.25))}
 
-/* ====== accueil : 4 colonnes, « Chanter » en large ====== */
-.accueil-grille.cordes{grid-template-columns:1.25fr 1fr 1fr 1fr;grid-template-rows:1fr 1fr}
-.accueil-grille.cordes .c-morceaux{grid-column:span 2}
+/* ====== accueil : Parcours en grand, quatre cartes à côté ====== */
+.accueil-grille.cordes{grid-template-columns:1.25fr 1fr 1fr;grid-template-rows:1fr 1fr}
 .c-atelier{--c1:#fbbf24;--c2:#e8590c}
 
 /* ====== choix de l'instrument ====== */
@@ -818,14 +817,11 @@ kbd{
 .g-accords b{font:800 26px/1 var(--f-titre);letter-spacing:.02em;color:var(--encre)}
 .g-mesure.double .g-accords{justify-content:space-between}
 .g-mesure.double .g-accords b{font-size:22px}
-.g-paroles{font-size:14px;line-height:1.3;color:var(--encre-2);min-height:1.3em}
-.avec-paroles .g-mesures{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
 .g-temps{position:absolute;left:10px;right:10px;bottom:6px;display:flex;gap:4px}
 .g-temps i{flex:1;height:3px;border-radius:2px;background:var(--surface-3)}
 .g-prog{position:absolute;left:0;bottom:0;height:5px;width:var(--prog,0%);background:linear-gradient(90deg,var(--ton-1),var(--ton-2));opacity:0}
 .g-mesure.actif{box-shadow:inset 0 0 0 2.5px var(--ton-2), 0 10px 22px -12px rgba(245,66,108,.6);transform:translateY(-1px);background:#fff6f8}
 .g-mesure.actif .g-accords b{color:var(--ton-texte)}
-.g-mesure.actif .g-paroles{color:var(--encre);font-weight:700}
 .g-mesure.actif .g-prog{opacity:1}
 
 .diag-zone{display:flex;flex-direction:column;gap:10px;min-height:0}
@@ -930,8 +926,6 @@ kbd{
 @container appli (max-width:700px){
   .partition-zone.jeu-cordes{grid-template-columns:minmax(0,1fr) 120px}
   .diag-suivant{display:none}
-  .accueil-grille.cordes{grid-template-columns:1.2fr 1fr 1fr}
-  .accueil-grille.cordes .c-morceaux{grid-column:auto}
 }
 
 /* barre « main droite » : le motif de grattage ou d'arpège, qui s'allume en direct */
@@ -1033,10 +1027,6 @@ kbd{
         <svg class="ico" aria-hidden="true"><use href="#i-play"/></svg><span id="cta-texte">Commencer</span>
       </a>
     </div>
-    <a class="carte-cat c-morceaux" href="#/morceaux">
-      <div class="cat-illus" id="illus-morceaux"></div>
-      <div class="cat-texte"><h2>Chanter</h2><p id="compte-morceaux"></p></div>
-    </a>
     <a class="carte-cat c-rythmes" href="#/accords">
       <div class="cat-illus" id="illus-accords"></div>
       <div class="cat-texte"><h2>Accords</h2><p id="compte-accords"></p></div>
@@ -1051,7 +1041,7 @@ kbd{
     </a>
     <a class="carte-cat c-atelier" href="#/jouer/atelier/perso">
       <div class="cat-illus" id="illus-atelier"></div>
-      <div class="cat-texte"><h2>Atelier</h2><p>Ta grille, tes paroles.</p></div>
+      <div class="cat-texte"><h2>Atelier</h2><p>Écris ta grille, joue par-dessus.</p></div>
     </a>
   </div>
 </section>
@@ -1120,7 +1110,7 @@ kbd{
         <button class="statut-btn travail" id="st-travail" type="button" aria-pressed="false" title="À travailler"><svg class="ico" aria-hidden="true"><use href="#i-drapeau"/></svg><span>À travailler</span></button>
         <button class="statut-btn acquis" id="st-acquis" type="button" aria-pressed="false" title="Acquis"><svg class="ico" aria-hidden="true"><use href="#i-coche"/></svg><span>Acquis</span></button>
       </div>
-      <button class="rond" id="j-paroles" type="button" aria-label="Mes paroles" title="Mes paroles"><svg class="ico" aria-hidden="true"><use href="#i-texte"/></svg></button>
+      <button class="rond" id="j-grille" type="button" aria-label="Ma grille" title="Ma grille"><svg class="ico" aria-hidden="true"><use href="#i-texte"/></svg></button>
       <button class="rond" id="j-aide" type="button" aria-label="Explications"><svg class="ico" aria-hidden="true"><use href="#i-aide"/></svg></button>
       <button class="rond" id="j-reglages" type="button" aria-label="Réglages"><svg class="ico" aria-hidden="true"><use href="#i-reglages"/></svg></button>
     </div>
@@ -1167,20 +1157,19 @@ kbd{
   </header>
   <div class="volet-corps">
     <div id="aide-corps" class="texte"></div>
-    <h3>Les accords du morceau</h3>
+    <h3>Les accords de la grille</h3>
     <div id="aide-accords" class="schemas"></div>
     <p class="muted small">Touche un schéma pour entendre l'accord.</p>
   </div>
 </aside>
 
-<aside class="volet" id="volet-paroles" hidden role="dialog" aria-modal="true" aria-labelledby="paroles-titre">
+<aside class="volet" id="volet-grille" hidden role="dialog" aria-modal="true" aria-labelledby="grille-titre">
   <header class="volet-tete">
-    <h2 id="paroles-titre">Mes paroles</h2>
+    <h2 id="grille-titre">Ma grille</h2>
     <button class="rond petit" type="button" data-fermer aria-label="Fermer"><svg class="ico" aria-hidden="true"><use href="#i-fermer"/></svg></button>
   </header>
   <div class="volet-corps">
-    <div id="atelier-grille" hidden>
-      <h3>Ma grille</h3>
+    <div id="atelier-grille">
       <p class="muted small">Une barre « | » sépare les mesures. Deux accords dans une mesure se la partagent. Une ligne par section, « Refrain: » pour la nommer.</p>
       <textarea id="atelier-texte" class="zone-texte" rows="5" spellcheck="false" aria-label="Grille d'accords"></textarea>
       <label class="ligne-reglage"><span>Mesure</span>
@@ -1188,13 +1177,6 @@ kbd{
       </label>
       <div class="rang-boutons"><button class="btn-plat accent" id="atelier-appliquer" type="button">Appliquer</button></div>
       <p class="muted small" id="atelier-erreur" role="alert"></p>
-    </div>
-    <h3>Paroles</h3>
-    <p class="muted small">Colle les paroles de la chanson : une ligne par mesure, elles s'affichent sous les accords et défilent avec la musique. Une ligne vide = une mesure sans paroles. Elles restent sur cet appareil.</p>
-    <textarea id="paroles-texte" class="zone-texte" rows="14" aria-label="Paroles, une ligne par mesure"></textarea>
-    <div class="rang-boutons">
-      <button class="btn-plat accent" id="paroles-ok" type="button">Enregistrer</button>
-      <button class="btn-plat" id="paroles-effacer" type="button">Effacer</button>
     </div>
   </div>
 </aside>
@@ -1272,7 +1254,7 @@ kbd{
 /* Numéro de version de l'application : affiché en haut de l'écran, et utilisé par
  * le service worker (build.js --site) pour que les téléphones installés récupèrent
  * chaque nouvelle version. À augmenter à chaque livraison. */
-const VERSION = '1.0.0';
+const VERSION = '1.1.0';
 const DATE_VERSION = '2026-09-30';
 
 
@@ -2055,14 +2037,13 @@ function lireGrille(texte){
   return texte.split('|').map(m => m.trim()).filter(m => m.length).map(m => m.split(/\s+/));
 }
 
-/* Compile des sections [{ nom, mesures:'C | G', paroles:'… | …', rep }] en mesures à plat.
- * Renvoie { mesures:[{ accords:[{nom, pas}], texte, section, numero }], sections:[{nom, debut, fin}] } */
+/* Compile des sections [{ nom, mesures:'C | G', rep }] en mesures à plat.
+ * Renvoie { mesures:[{ accords:[{nom, pas}], section, numero }], sections:[{nom, debut, fin}] } */
 function compilerSections(sections, mesureId){
   const pas = pasParMesure(mesureId);
   const out = [], plages = [];
   sections.forEach((sec, si) => {
     const grille = lireGrille(sec.mesures);
-    const textes = (sec.paroles || '').split('|').map(t => t.trim());
     const debut = out.length;
     const tours = sec.rep || 1;
     for (let r = 0; r < tours; r++){
@@ -2070,7 +2051,6 @@ function compilerSections(sections, mesureId){
         const n = accords.length;
         out.push({
           accords:accords.map((nom, k) => ({ nom, pas:Math.round(k * pas / n) })),
-          texte:textes[i] || '',
           section:si, numero:i, tour:r
         });
       });
@@ -2332,139 +2312,6 @@ class Lecteur {
 }
 
 
-/* ================= js/songs.js ================= */
-/* Morceaux d'accompagnement : grilles d'accords pour chanter en jouant.
- * Aucune parole n'est fournie ici : chacun colle les siennes (écran « Mes paroles »),
- * elles restent enregistrées dans le navigateur. Les grilles sont simplifiées,
- * transposables, et le tempo est indicatif.
- * sections : [{ nom, mesures:'C | G Am | F', rep }]  — une barre = une mesure. */
-
-const GENRES = [
-  { id:'trad',   nom:'Chansons traditionnelles', court:'Trad.',  grad:['#38bdf8', '#1d4ed8'], desc:'Comptines et chansons populaires : trois accords, idéal pour débuter.' },
-  { id:'pop',    nom:'Pop & folk',               court:'Pop',    grad:['#f472b6', '#be185d'], desc:'Les grands classiques à chanter autour du feu.' },
-  { id:'rock',   nom:'Rock & blues',             court:'Rock',   grad:['#fb923c', '#e11d48'], desc:'Power chords, shuffle, grilles de blues.' },
-  { id:'reggae', nom:'Reggae & soul',            court:'Soul',   grad:['#34d399', '#0f766e'], desc:'Contretemps, grooves posés.' },
-  { id:'grilles',nom:'Grilles types',            court:'Grilles',grad:['#a78bfa', '#6d28d9'], desc:'Les enchaînements qu\'on retrouve dans des milliers de chansons.' }
-];
-
-const m = (id, titre, origine, genre, niveau, bpm, mesure, style, sections, extra = {}) =>
-  ({ id, titre, origine, genre, niveau, bpm, mesure, style, sections, ...extra });
-
-const MORCEAUX = [
-  /* --- traditionnelles (domaine public) --- */
-  m('clair-lune', 'Au clair de la lune', 'Chanson traditionnelle française', 'trad', 1, 90, '4/4', 'noires', [
-    { nom:'Couplet', mesures:'C | C G | C | G C | C | C G | C | G C', rep:2 }]),
-  m('frere-jacques', 'Frère Jacques', 'Canon traditionnel', 'trad', 1, 100, '4/4', 'noires', [
-    { nom:'Canon', mesures:'C | C | C | C | C | C | C G | C', rep:2 }]),
-  m('pont-avignon', 'Sur le pont d\'Avignon', 'Chanson traditionnelle française', 'trad', 1, 110, '2/4', 'folk', [
-    { nom:'Refrain', mesures:'C | G | C | G | C | G | G | C' },
-    { nom:'Couplet', mesures:'C | G | C | G C' }]),
-  m('alouette', 'Alouette', 'Chanson traditionnelle', 'trad', 1, 112, '4/4', 'croches', [
-    { nom:'Refrain', mesures:'C | G7 C | C | G7 C' },
-    { nom:'Couplet', mesures:'C | C | G7 | C', rep:2 }]),
-  m('claire-fontaine', 'À la claire fontaine', 'Chanson traditionnelle française', 'trad', 2, 76, '4/4', 'ballade', [
-    { nom:'Couplet', mesures:'C | G | C | G | C | F | G | C' },
-    { nom:'Refrain', mesures:'F | C | G | C' }]),
-  m('ma-blonde', 'Auprès de ma blonde', 'Chanson traditionnelle française', 'trad', 2, 104, '4/4', 'folk', [
-    { nom:'Couplet', mesures:'G | D | G | D G | G | D | G | D G' },
-    { nom:'Refrain', mesures:'C | G | D | G | C | G | D | G' }]),
-  m('petit-navire', 'Il était un petit navire', 'Chanson traditionnelle française', 'trad', 1, 96, '4/4', 'folk', [
-    { nom:'Couplet', mesures:'G | G | D | G | G | C | D | G', rep:2 }]),
-  m('cadet-rousselle', 'Cadet Rousselle', 'Chanson traditionnelle française', 'trad', 2, 120, '2/4', 'folk', [
-    { nom:'Couplet', mesures:'D | A | D | A D | D | A | D | A D' },
-    { nom:'Refrain', mesures:'G | D | A | D' }]),
-  m('mon-beau-sapin', 'Mon beau sapin', 'Chant traditionnel', 'trad', 2, 84, '3/4', 'valse', [
-    { nom:'Couplet', mesures:'G | G | D | G | G | G | D | G | D | G | D | G | G | C | D | G' }]),
-  m('dagobert', 'Le bon roi Dagobert', 'Chanson traditionnelle française', 'trad', 1, 116, '4/4', 'croches', [
-    { nom:'Couplet', mesures:'C | G | C | G C | C | F | G | C' }]),
-  m('amazing-grace', 'Amazing Grace', 'Hymne traditionnel (1779)', 'trad', 2, 80, '3/4', 'valse', [
-    { nom:'Couplet', mesures:'G | G | C | G | G | G | D | D | G | G7 | C | G | G | D | G | G' }]),
-  m('saints', 'When the Saints Go Marching In', 'Traditionnel américain', 'trad', 2, 120, '4/4', 'folk', [
-    { nom:'Couplet', mesures:'C | C | C | G | C | C7 | F | F | C | G | C | C' }]),
-  m('oh-susanna', 'Oh! Susanna', 'Stephen Foster (1848)', 'trad', 2, 116, '2/4', 'country', [
-    { nom:'Couplet', mesures:'C | C | C | G | C | C | G | C', rep:2 },
-    { nom:'Refrain', mesures:'F | F | C | G | C | C | G | C' }]),
-  m('rising-sun', 'The House of the Rising Sun', 'Ballade traditionnelle américaine', 'trad', 3, 76, '6/8', 'six8', [
-    { nom:'Couplet', mesures:'Am | C | D | F | Am | C | E | E | Am | C | D | F | Am | E | Am | E' }], { mode:'arp' }),
-  m('greensleeves', 'Greensleeves', 'Air anglais du XVIᵉ siècle', 'trad', 3, 66, '6/8', 'six8', [
-    { nom:'Couplet', mesures:'Am | G | Am | E | Am | G | Am E | Am' },
-    { nom:'Refrain', mesures:'C | G | Am | E | C | G | Am E | Am' }], { mode:'arp' }),
-  m('scarborough', 'Scarborough Fair', 'Ballade traditionnelle anglaise', 'trad', 3, 72, '3/4', 'valse', [
-    { nom:'Couplet', mesures:'Am | Am | G | Am | C | Am D | Am | Am | C | C | G | G | Am | G | Am | Am' }], { mode:'arp' }),
-  m('joyeux-anniv', 'Joyeux anniversaire', 'Air traditionnel', 'trad', 1, 96, '3/4', 'valse', [
-    { nom:'Chanson', mesures:'C | G | G | C | C | F | C G | C' }]),
-
-  /* --- grilles de morceaux connus (sans paroles : on chante par-dessus) --- */
-  m('let-it-be', 'Let It Be', 'The Beatles', 'pop', 1, 72, '4/4', 'pop', [
-    { nom:'Couplet', mesures:'C | G | Am | F | C | G | F C', rep:2 },
-    { nom:'Refrain', mesures:'Am | G | F | C | C | G | F C' }]),
-  m('stand-by-me', 'Stand By Me', 'Ben E. King', 'pop', 1, 118, '4/4', 'pop', [
-    { nom:'Couplet', mesures:'G | G | Em | Em | C | D | G | G', rep:2 }]),
-  m('knockin', 'Knockin\' on Heaven\'s Door', 'Bob Dylan', 'pop', 1, 68, '4/4', 'folk', [
-    { nom:'Couplet', mesures:'G | D | Am | Am | G | D | C | C', rep:2 }]),
-  m('country-roads', 'Take Me Home, Country Roads', 'John Denver', 'pop', 2, 82, '4/4', 'folk', [
-    { nom:'Couplet', mesures:'G | Em | D | C | G | Em | D | G' },
-    { nom:'Refrain', mesures:'G | D | Em | C | G | D | C | G' }]),
-  m('im-yours', 'I\'m Yours', 'Jason Mraz', 'pop', 2, 76, '4/4', 'reggae', [
-    { nom:'Couplet', mesures:'C | G | Am | F', rep:2 }]),
-  m('hey-jude', 'Hey Jude', 'The Beatles', 'pop', 2, 74, '4/4', 'pop', [
-    { nom:'Couplet', mesures:'F | C | C7 | F | Bb | F | C | F' },
-    { nom:'Final', mesures:'F | Eb | Bb | F', rep:2 }]),
-  m('wonderwall', 'Wonderwall', 'Oasis', 'pop', 3, 87, '4/4', 'croches', [
-    { nom:'Couplet', mesures:'Em7 | G | Dsus4 | A7sus4', rep:2 },
-    { nom:'Refrain', mesures:'C | D | Em | Em' }], { capo:2 }),
-  m('hallelujah', 'Hallelujah', 'Leonard Cohen', 'pop', 2, 58, '6/8', 'six8', [
-    { nom:'Couplet', mesures:'C | Am | C | Am | F | G | C | G' },
-    { nom:'Refrain', mesures:'F | Am | F | C G C' }], { mode:'arp' }),
-  m('riptide', 'Riptide', 'Vance Joy', 'pop', 2, 100, '4/4', 'croches', [
-    { nom:'Grille', mesures:'Am | G | C | C', rep:2 }]),
-  m('brown-eyed', 'Brown Eyed Girl', 'Van Morrison', 'rock', 2, 148, '4/4', 'rock', [
-    { nom:'Couplet', mesures:'G | C | G | D', rep:2 },
-    { nom:'Refrain', mesures:'C | D | G | Em | C | D | G | D' }]),
-  m('alabama', 'Sweet Home Alabama', 'Lynyrd Skynyrd', 'rock', 2, 98, '4/4', 'rock', [
-    { nom:'Grille', mesures:'D | C G | D | C G', rep:2 }]),
-  m('twist-shout', 'Twist and Shout', 'The Isley Brothers', 'rock', 1, 126, '4/4', 'rock', [
-    { nom:'Grille', mesures:'D G | A G', rep:4 }]),
-  m('la-bamba', 'La Bamba', 'Traditionnel mexicain', 'rock', 1, 150, '4/4', 'rock', [
-    { nom:'Grille', mesures:'C F | G F', rep:4 }]),
-  m('zombie', 'Zombie', 'The Cranberries', 'rock', 2, 84, '4/4', 'rock', [
-    { nom:'Grille', mesures:'Em | C | G | D', rep:2 }], { puissance:true }),
-  m('hit-road', 'Hit the Road Jack', 'Ray Charles', 'rock', 2, 88, '4/4', 'croches', [
-    { nom:'Grille', mesures:'Am G | F E7', rep:4 }]),
-  m('hotel-cal', 'Hotel California', 'Eagles', 'rock', 3, 75, '4/4', 'arpege', [
-    { nom:'Couplet', mesures:'Bm | F# | A | E | G | D | Em | F#' }], { mode:'arp' }),
-  m('johnny-b', 'Johnny B. Goode', 'Chuck Berry', 'rock', 3, 168, '4/4', 'rock', [
-    { nom:'Blues', mesures:'A | A | A | A | D | D | A | A | E | E | A | A' }], { puissance:true }),
-  m('no-woman', 'No Woman, No Cry', 'Bob Marley', 'reggae', 2, 78, '4/4', 'reggae', [
-    { nom:'Grille', mesures:'C G | Am F | C F | C G', rep:2 }]),
-  m('three-birds', 'Three Little Birds', 'Bob Marley', 'reggae', 1, 74, '4/4', 'reggae', [
-    { nom:'Refrain', mesures:'A | A | D | A | A | A | E | A' }]),
-  m('with-without', 'With or Without You', 'U2', 'reggae', 1, 110, '4/4', 'croches', [
-    { nom:'Grille', mesures:'D | A | Bm | G', rep:2 }]),
-
-  /* --- grilles types --- */
-  m('g-pop4', 'Les quatre accords de la pop', 'I – V – vi – IV', 'grilles', 1, 90, '4/4', 'pop', [
-    { nom:'Grille', mesures:'C | G | Am | F', rep:2 }]),
-  m('g-50s', 'La grille des années 50', 'I – vi – IV – V', 'grilles', 1, 100, '4/4', 'croches', [
-    { nom:'Grille', mesures:'C | Am | F | G', rep:2 }]),
-  m('g-mineur', 'Ballade mineure', 'vi – IV – I – V', 'grilles', 1, 80, '4/4', 'ballade', [
-    { nom:'Grille', mesures:'Am | F | C | G', rep:2 }]),
-  m('g-blues', 'Blues 12 mesures', 'I – IV – V en 12/8', 'grilles', 2, 70, '12/8', 'shuffle', [
-    { nom:'Blues', mesures:'E7 | A7 | E7 | E7 | A7 | A7 | E7 | E7 | B7 | A7 | E7 | B7' }]),
-  m('g-andalouse', 'Cadence andalouse', 'Am – G – F – E (flamenco)', 'grilles', 2, 96, '4/4', 'croches', [
-    { nom:'Grille', mesures:'Am | G | F | E', rep:2 }], { mode:'arp' }),
-  m('g-valse', 'Valse en sol', 'I – IV – V en 3/4', 'grilles', 1, 120, '3/4', 'valse', [
-    { nom:'Grille', mesures:'G | G | C | G | D | D | G | G' }]),
-  m('g-jazz', 'II – V – I', 'La cadence du jazz', 'grilles', 3, 110, '4/4', 'noires', [
-    { nom:'Grille', mesures:'Dm7 | G7 | Cmaj7 | Cmaj7', rep:2 }])
-];
-
-const genreDe = mo => GENRES.find(g => g.id === mo.genre) || GENRES[0];
-const morceauxDuGenre = id => MORCEAUX.filter(mo => mo.genre === id).sort((a, b) => a.niveau - b.niveau);
-/* tous les accords utilisés, sans doublon */
-const accordsDe = mo => [...new Set(mo.sections.flatMap(s => s.mesures.split(/[|\s]+/).filter(Boolean)))];
-
-
 /* ================= js/lessons.js ================= */
 /* Parcours : leçons progressives, valables pour les quatre instruments.
  * Quand un accord est trop dur sur un instrument, la leçon donne une grille adaptée
@@ -2515,7 +2362,7 @@ const LECONS = [
     ['Dis le rythme à voix haute : « boum, boum-tchak, tchak-boum-tchak ».']),
   L('l07', 1, 'Chanter et jouer : la comptine', 'Garder la main droite pendant qu\'on chante.',
     `<p>Choisis une chanson très simple que tu connais par cœur. D'abord, joue seulement le premier temps de chaque mesure en chantant. Quand ça tourne, reviens au grattage en noires.</p>
-     <p>Astuce : dans <b>Morceaux</b>, colle les paroles de ta chanson dans « Mes paroles » : elles défilent sous les accords.</p>`,
+`,
     { bpm:84, mesure:'4/4', style:'noires', sections:[{ nom:'Comptine', mesures:'C | C G | C | G C', rep:2 }] },
     ['La main droite doit devenir automatique : c\'est elle qui tient le tempo, pas la voix.']),
 
@@ -2588,7 +2435,7 @@ const LECONS = [
     { bpm:92, mesure:'4/4', style:'croches', sections:[{ nom:'Grille', mesures:'Am | G | F | E', rep:2 }],
       grilles:{ guitare:'Am | G | Fmaj7 | E' } }),
   L('l24', 4, 'Ton propre accompagnement', 'Composer une grille et chanter dessus.',
-    `<p>Ouvre l'<b>Atelier</b> : écris ta grille (ex. « C | G | Am | F »), choisis le style et le tempo, colle tes paroles. Tu as ton propre accompagnement.</p>`,
+    `<p>Ouvre l'<b>Atelier</b> : écris ta grille (ex. « C | G | Am | F »), choisis le style et le tempo. Tu as ton propre accompagnement.</p>`,
     { bpm:84, mesure:'4/4', style:'folk', sections:[{ nom:'Exemple', mesures:'C | Em | F | G', rep:2 }],
       grilles:{ guitare:'C | Em | Fmaj7 | G' } })
 ];
@@ -2708,7 +2555,6 @@ function illusInstrument(id){
 const ILLUS = {
   parcours:'<svg viewBox="0 0 200 110"><path d="M10 96 C60 96 60 60 100 60 S140 20 190 18" fill="none" stroke="var(--ill-3)" stroke-width="5" stroke-dasharray="2 10" stroke-linecap="round"/><circle cx="10" cy="96" r="10" fill="var(--ill-1)"/><circle cx="100" cy="60" r="10" fill="var(--ill-2)"/><circle cx="190" cy="18" r="12" fill="var(--ill-1)"/></svg>',
   accords:'<svg viewBox="0 0 120 110"><rect x="18" y="14" width="84" height="6" rx="2" fill="var(--ill-1)"/><g stroke="var(--ill-2)" stroke-width="2">' + [0, 1, 2, 3, 4, 5].map(i => `<line x1="${22 + i * 15.2}" x2="${22 + i * 15.2}" y1="20" y2="100"/>`).join('') + '</g><g stroke="var(--ill-3)" stroke-width="2">' + [40, 60, 80, 100].map(y => `<line x1="20" x2="100" y1="${y}" y2="${y}"/>`).join('') + '</g><circle cx="52.4" cy="50" r="8" fill="var(--ill-1)"/><circle cx="67.6" cy="50" r="8" fill="var(--ill-1)"/><circle cx="37.2" cy="70" r="8" fill="var(--ill-1)"/></svg>',
-  morceaux:'<svg viewBox="0 0 160 110"><rect x="44" y="10" width="30" height="46" rx="15" fill="var(--ill-1)"/><path d="M34 44a25 25 0 0 0 50 0" fill="none" stroke="var(--ill-2)" stroke-width="5"/><line x1="59" x2="59" y1="70" y2="96" stroke="var(--ill-2)" stroke-width="5"/><path d="M104 30v44a10 8 0 1 1-6-7V38l40-8v34a10 8 0 1 1-6-7V26z" fill="var(--ill-1)"/></svg>',
   rythmes:'<svg viewBox="0 0 160 110"><g fill="var(--ill-1)">' + [0, 1, 2, 3].map(i => `<path d="M${20 + i * 34} 80 l12 -46 l6 0 l-12 46z" opacity="${i % 2 ? 0.6 : 1}"/>`).join('') + '</g><g fill="var(--ill-2)">' + [0, 1, 2, 3].map(i => `<circle cx="${26 + i * 34}" cy="${i % 2 ? 30 : 90}" r="5"/>`).join('') + '</g></svg>',
   accordeur:'<svg viewBox="0 0 160 110"><path d="M20 90a60 60 0 0 1 120 0" fill="none" stroke="var(--ill-3)" stroke-width="8" stroke-linecap="round"/><path d="M68 32a60 60 0 0 1 24 0" fill="none" stroke="var(--ill-1)" stroke-width="8" stroke-linecap="round"/><line x1="80" y1="90" x2="86" y2="38" stroke="var(--ill-1)" stroke-width="5" stroke-linecap="round"/><circle cx="80" cy="90" r="8" fill="var(--ill-2)"/></svg>',
   atelier:'<svg viewBox="0 0 160 110"><rect x="16" y="18" width="128" height="74" rx="10" fill="var(--ill-fond)" stroke="var(--ill-3)" stroke-width="3"/><g fill="var(--ill-1)"><rect x="28" y="32" width="24" height="16" rx="4"/><rect x="68" y="32" width="24" height="16" rx="4" opacity=".75"/><rect x="108" y="32" width="24" height="16" rx="4"/></g><g stroke="var(--ill-2)" stroke-width="4" stroke-linecap="round"><line x1="28" x2="120" y1="64" y2="64"/><line x1="28" x2="90" y1="78" y2="78"/></g></svg>'
@@ -2817,7 +2663,6 @@ const P = { charger, jour, etatActuel, estFaite, marquer, statut, setStatut, ele
 
 
 
-
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
@@ -2863,11 +2708,10 @@ function sectionsAtelier(){
 
 const LISTES = {
   lecon:    { nom:'Leçon',     items:() => LECONS,                        retour:it => '#/parcours/' + it.niveau },
-  morceau:  { nom:'Morceau',   items:it => morceauxDuGenre(it.genre),     retour:it => '#/morceaux/' + it.genre },
   rythme:   { nom:'Rythmique', items:() => RYTHMIQUES,                    retour:() => '#/rythmiques' },
   atelier:  { nom:'Atelier',   items:() => [atelier],                     retour:() => '#/' }
 };
-const SOURCES = { lecon:() => LECONS, morceau:() => MORCEAUX, rythme:() => RYTHMIQUES, atelier:() => [atelier] };
+const SOURCES = { lecon:() => LECONS, rythme:() => RYTHMIQUES, atelier:() => [atelier] };
 const lienJouer = (liste, it) => `#/jouer/${liste}/${encodeURIComponent(it.id)}`;
 const prochaineLecon = () => LECONS.find(l => !P.estFaite(l.id)) || LECONS[LECONS.length - 1];
 
@@ -2899,7 +2743,6 @@ function route(){
   if (parts[0] !== 'accordeur') arreterMicro();
   switch (parts[0]){
     case 'parcours':    return parts[1] ? ecranNiveau(+parts[1]) : ecranParcours();
-    case 'morceaux':    return parts[1] ? ecranGenre(parts[1]) : ecranMorceaux();
     case 'accords':     return ecranAccords();
     case 'rythmiques':  return ecranRythmiques();
     case 'progression': return ecranProgression();
@@ -2956,11 +2799,9 @@ function ecranAccueil(){
   const suivante = prochaineLecon();
   $('#cta-continuer').href = lienJouer('lecon', suivante);
   $('#cta-texte').textContent = faites ? `Leçon ${LECONS.indexOf(suivante) + 1} : ${suivante.titre}` : 'Commencer';
-  $('#compte-morceaux').textContent = `${MORCEAUX.length} accompagnements pour chanter.`;
   $('#compte-accords').textContent = famille() === 'basse' ? 'Fondamentales et quintes sur le manche.' : 'Schémas à toucher pour les entendre.';
   $('#compte-rythmes').textContent = `${RYTHMIQUES.length} façons de gratter.`;
   $('#illus-parcours').innerHTML = ILLUS.parcours;
-  $('#illus-morceaux').innerHTML = ILLUS.morceaux;
   $('#illus-accords').innerHTML = ILLUS.accords;
   $('#illus-rythmes').innerHTML = ILLUS.rythmes;
   $('#illus-accordeur').innerHTML = ILLUS.accordeur;
@@ -3041,30 +2882,6 @@ function ecranNiveau(n){
     classe:(P.estFaite(l.id) ? 'faite' : '') + (l === suivante ? ' prochaine' : '')
   })).join('');
   ecranListe({ sur:'Parcours · ' + inst().nom, titre:`${n}. ${nv.nom}`, retour:'#/parcours', html:`<div class="rangee">${cartes}</div>` });
-}
-
-/* --- morceaux --- */
-function ecranMorceaux(){
-  const html = GENRES.map(g => {
-    const l = morceauxDuGenre(g.id);
-    return tuile({ href:'#/morceaux/' + g.id, illus:ILLUS.morceaux, titre:g.nom, coin:`${l.length} titres`, texte:g.desc, grad:g.grad });
-  }).join('');
-  ecranListe({ sur:'Accompagnements pour chanter', titre:'Chanter', html:`<div class="rangee tuiles">${html}</div>` });
-}
-function ecranGenre(id){
-  const g = GENRES.find(x => x.id === id);
-  if (!g) return ecranMorceaux();
-  const l = morceauxDuGenre(id);
-  const html = [1, 2, 3].map(n => {
-    const lot = l.filter(mo => mo.niveau === n);
-    if (!lot.length) return '';
-    return `<section class="groupe" id="niv-${n}">
-      <div class="groupe-tete" style="${gradStyle(NIV_GRAD[n - 1])}"><span class="g-num">${n}</span><b>${NOMS_NIVEAUX[n]}</b><span>${lot.length} titre${lot.length > 1 ? 's' : ''}</span></div>
-      <div class="rangee">${lot.map(mo => itemCarte({ liste:'morceau', it:mo, num:'♪', grad:g.grad, bpm:mo.bpm + ' BPM',
-        meta:esc(mo.origine) + ' · ' + accordsDe(mo).slice(0, 5).map(a => afficherAccord(a, reglages.solfege)).join(' ') })).join('')}</div></section>`;
-  }).join('');
-  const sauts = [1, 2, 3].filter(n => l.some(mo => mo.niveau === n)).map(n => ['niv-' + n, 'N' + n, NIV_GRAD[n - 1][1]]);
-  ecranListe({ sur:'Chanter', titre:g.nom, retour:'#/morceaux', html, sauts });
 }
 
 /* --- rythmiques --- */
@@ -3173,7 +2990,7 @@ function chargerElement(liste, item, { garderTempo = false } = {}){
   navLien('#j-suiv', i >= 0 && i < items.length - 1 ? lienJouer(liste, items[i + 1]) : null);
   if (lecon) P.setDerniereLecon(item.id);
   majStatutBoutons();
-  $('#j-paroles').hidden = lecon && item.type === 'cordes';
+  $('#j-grille').hidden = liste !== 'atelier';
 
   // leçon « cordes » : pas d'accompagnement, les cordes à vide et l'accordeur
   const cordes = item.type === 'cordes';
@@ -3227,16 +3044,10 @@ function quitterLecteur(){
   arreterReference();
 }
 
-/* --- paroles : une ligne par mesure jouée --- */
-const cleParoles = () => courant ? `mes-cordes-paroles:${courant.liste}:${courant.item.id}` : null;
-const parolesDe = () => (lire(cleParoles(), '') || '').split('\n');
-
-/* --- la grille à l'écran : sections, mesures, accords, paroles --- */
+/* --- la grille à l'écran : sections, mesures, accords --- */
 function nomAffiche(nom){ return afficherAccord(lecteur.nomJoue(nom), reglages.solfege); }
 function rendreGrille(){
   const { mesures, sections } = courant.compile;
-  const paroles = parolesDe();
-  const aParoles = paroles.some(l => l.trim());
   const res = MESURES[lecteur.mesureId];
   let html = barreMainDroite();
   sections.forEach((s, si) => {
@@ -3245,14 +3056,12 @@ function rendreGrille(){
       const m = mesures[k];
       html += `<div class="g-mesure${m.accords.length > 1 ? ' double' : ''}" data-m="${k}">
         <div class="g-accords">${m.accords.map(a => `<b>${esc(nomAffiche(a.nom))}</b>`).join('')}</div>
-        ${aParoles ? `<div class="g-paroles">${esc(paroles[k] || '')}</div>` : ''}
         <div class="g-temps">${Array.from({ length:res.beats }, () => '<i></i>').join('')}</div>
         <span class="g-prog"></span></div>`;
     }
     html += '</div></div>';
   });
   $('#grille-accords').innerHTML = html;
-  $('#grille-accords').classList.toggle('avec-paroles', aParoles);
   $('#grille-accords').scrollTop = 0;
   mesureActive = -1;
 }
@@ -3354,15 +3163,10 @@ function remplirAide(){
   if (l === 'lecon'){
     h = `<h2>${esc(it.titre)}</h2><p class="objectif"><b>Objectif :</b> ${esc(it.objectif)}</p>${it.texte}${(it.conseils || []).map(CONSEIL).join('')}`;
     if (famille() === 'basse' && it.type !== 'cordes') h += CONSEIL('À la basse : joue la fondamentale de chaque accord (le rond « F » sur le schéma), sur le premier temps, puis suis la ligne de basse de la rythmique. L\'appli joue les accords pour toi.');
-  } else if (l === 'morceau'){
-    h = `<h2>${esc(it.titre)}</h2><p class="muted">${esc(it.origine)} · ${it.mesure} · ${it.bpm} BPM</p>
-      <p>Grille d'accompagnement simplifiée pour chanter : aucune parole n'est incluse. Touche <b>Mes paroles</b> (icône texte) pour coller les tiennes : une ligne par mesure, elles défilent sous les accords.</p>
-      ${it.capo ? CONSEIL(`À la guitare, cette grille se joue avec le capodastre en case ${it.capo} (déjà réglé).`) : ''}
-      ${CONSEIL('Trop grave ou trop aigu pour ta voix ? Réglages → Transposer, un demi-ton à la fois.')}`;
   } else if (l === 'rythme'){
     h = `<h2>${esc(it.titre)}</h2><p>${esc(it.desc)}</p>${lectureRythme(it.style, it.mesure)}`;
   } else {
-    h = `<h2>Atelier</h2><p>Écris ta propre grille dans <b>Mes paroles</b> (icône texte) : les accords, la mesure, puis tes paroles. Choisis la rythmique et le tempo, et chante.</p>`;
+    h = `<h2>Atelier</h2><p>Écris ta propre grille (icône texte) : les accords et la mesure. Choisis ensuite la rythmique et le tempo dans les réglages, et joue par-dessus.</p>`;
   }
   $('#aide-corps').innerHTML = h;
   const accords = courant.compile ? [...new Set(courant.compile.mesures.flatMap(m => m.accords.map(a => a.nom)))] : [];
@@ -3528,23 +3332,13 @@ function fermerVolets(){
 }
 $('#j-aide').addEventListener('click', () => ouvrirVolet('volet-aide'));
 $('#j-reglages').addEventListener('click', () => ouvrirVolet('volet-reglages'));
-$('#j-paroles').addEventListener('click', () => {
-  if (!courant) return;
-  const estAtelier = courant.liste === 'atelier';
-  $('#atelier-grille').hidden = !estAtelier;
-  if (estAtelier){ $('#atelier-texte').value = atelier.texte; $('#atelier-mesure').value = atelier.mesure; $('#atelier-erreur').textContent = ''; }
-  $('#paroles-texte').value = lire(cleParoles(), '') || '';
-  $('#paroles-texte').placeholder = courant.compile ? courant.compile.mesures.map((m, i) => `Mesure ${i + 1} (${m.accords.map(a => a.nom).join(' ')})`).slice(0, 8).join('\n') + '\n…' : '';
-  $('#paroles-titre').textContent = estAtelier ? 'Ma grille' : 'Mes paroles';
-  ouvrirVolet('volet-paroles');
+$('#j-grille').addEventListener('click', () => {
+  if (!courant || courant.liste !== 'atelier') return;
+  $('#atelier-texte').value = atelier.texte;
+  $('#atelier-mesure').value = atelier.mesure;
+  $('#atelier-erreur').textContent = '';
+  ouvrirVolet('volet-grille');
 });
-$('#paroles-ok').addEventListener('click', () => {
-  ecrire(cleParoles(), $('#paroles-texte').value.replace(/\s+$/, ''));
-  if (courant && courant.compile) rendreGrille();
-  fermerVolets();
-  annoncer('Paroles enregistrées');
-});
-$('#paroles-effacer').addEventListener('click', () => { $('#paroles-texte').value = ''; });
 $('#atelier-appliquer').addEventListener('click', () => {
   const texte = $('#atelier-texte').value.trim();
   const secs = texte.split('\n').map(l => l.replace(/^[^:|]{1,24}:\s*/, '')).filter(l => l.trim());

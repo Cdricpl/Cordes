@@ -6,7 +6,6 @@ import { STYLES, STYLES_ORDRE, MESURES, stylesPour, compilerSections, lireGrille
 import { forme, notesDe } from './accords.js';
 import { analyserAccord, afficherAccord, transposer, nomClasse, midiEnFreq } from './theorie.js';
 import { detecterHauteur, noteProche, cordeProche } from './hauteur.js';
-import { MORCEAUX, GENRES, genreDe, morceauxDuGenre, accordsDe } from './songs.js';
 import { LECONS, NIVEAUX, sectionsPour } from './lessons.js';
 import { schemaAccord, cordesAVide, illusInstrument, ILLUS } from './diagrammes.js';
 import { Lecteur, notesBasse } from './player.js';
@@ -58,11 +57,10 @@ function sectionsAtelier(){
 
 const LISTES = {
   lecon:    { nom:'Leçon',     items:() => LECONS,                        retour:it => '#/parcours/' + it.niveau },
-  morceau:  { nom:'Morceau',   items:it => morceauxDuGenre(it.genre),     retour:it => '#/morceaux/' + it.genre },
   rythme:   { nom:'Rythmique', items:() => RYTHMIQUES,                    retour:() => '#/rythmiques' },
   atelier:  { nom:'Atelier',   items:() => [atelier],                     retour:() => '#/' }
 };
-const SOURCES = { lecon:() => LECONS, morceau:() => MORCEAUX, rythme:() => RYTHMIQUES, atelier:() => [atelier] };
+const SOURCES = { lecon:() => LECONS, rythme:() => RYTHMIQUES, atelier:() => [atelier] };
 const lienJouer = (liste, it) => `#/jouer/${liste}/${encodeURIComponent(it.id)}`;
 const prochaineLecon = () => LECONS.find(l => !P.estFaite(l.id)) || LECONS[LECONS.length - 1];
 
@@ -94,7 +92,6 @@ function route(){
   if (parts[0] !== 'accordeur') arreterMicro();
   switch (parts[0]){
     case 'parcours':    return parts[1] ? ecranNiveau(+parts[1]) : ecranParcours();
-    case 'morceaux':    return parts[1] ? ecranGenre(parts[1]) : ecranMorceaux();
     case 'accords':     return ecranAccords();
     case 'rythmiques':  return ecranRythmiques();
     case 'progression': return ecranProgression();
@@ -151,11 +148,9 @@ function ecranAccueil(){
   const suivante = prochaineLecon();
   $('#cta-continuer').href = lienJouer('lecon', suivante);
   $('#cta-texte').textContent = faites ? `Leçon ${LECONS.indexOf(suivante) + 1} : ${suivante.titre}` : 'Commencer';
-  $('#compte-morceaux').textContent = `${MORCEAUX.length} accompagnements pour chanter.`;
   $('#compte-accords').textContent = famille() === 'basse' ? 'Fondamentales et quintes sur le manche.' : 'Schémas à toucher pour les entendre.';
   $('#compte-rythmes').textContent = `${RYTHMIQUES.length} façons de gratter.`;
   $('#illus-parcours').innerHTML = ILLUS.parcours;
-  $('#illus-morceaux').innerHTML = ILLUS.morceaux;
   $('#illus-accords').innerHTML = ILLUS.accords;
   $('#illus-rythmes').innerHTML = ILLUS.rythmes;
   $('#illus-accordeur').innerHTML = ILLUS.accordeur;
@@ -236,30 +231,6 @@ function ecranNiveau(n){
     classe:(P.estFaite(l.id) ? 'faite' : '') + (l === suivante ? ' prochaine' : '')
   })).join('');
   ecranListe({ sur:'Parcours · ' + inst().nom, titre:`${n}. ${nv.nom}`, retour:'#/parcours', html:`<div class="rangee">${cartes}</div>` });
-}
-
-/* --- morceaux --- */
-function ecranMorceaux(){
-  const html = GENRES.map(g => {
-    const l = morceauxDuGenre(g.id);
-    return tuile({ href:'#/morceaux/' + g.id, illus:ILLUS.morceaux, titre:g.nom, coin:`${l.length} titres`, texte:g.desc, grad:g.grad });
-  }).join('');
-  ecranListe({ sur:'Accompagnements pour chanter', titre:'Chanter', html:`<div class="rangee tuiles">${html}</div>` });
-}
-function ecranGenre(id){
-  const g = GENRES.find(x => x.id === id);
-  if (!g) return ecranMorceaux();
-  const l = morceauxDuGenre(id);
-  const html = [1, 2, 3].map(n => {
-    const lot = l.filter(mo => mo.niveau === n);
-    if (!lot.length) return '';
-    return `<section class="groupe" id="niv-${n}">
-      <div class="groupe-tete" style="${gradStyle(NIV_GRAD[n - 1])}"><span class="g-num">${n}</span><b>${NOMS_NIVEAUX[n]}</b><span>${lot.length} titre${lot.length > 1 ? 's' : ''}</span></div>
-      <div class="rangee">${lot.map(mo => itemCarte({ liste:'morceau', it:mo, num:'♪', grad:g.grad, bpm:mo.bpm + ' BPM',
-        meta:esc(mo.origine) + ' · ' + accordsDe(mo).slice(0, 5).map(a => afficherAccord(a, reglages.solfege)).join(' ') })).join('')}</div></section>`;
-  }).join('');
-  const sauts = [1, 2, 3].filter(n => l.some(mo => mo.niveau === n)).map(n => ['niv-' + n, 'N' + n, NIV_GRAD[n - 1][1]]);
-  ecranListe({ sur:'Chanter', titre:g.nom, retour:'#/morceaux', html, sauts });
 }
 
 /* --- rythmiques --- */
@@ -368,7 +339,7 @@ function chargerElement(liste, item, { garderTempo = false } = {}){
   navLien('#j-suiv', i >= 0 && i < items.length - 1 ? lienJouer(liste, items[i + 1]) : null);
   if (lecon) P.setDerniereLecon(item.id);
   majStatutBoutons();
-  $('#j-paroles').hidden = lecon && item.type === 'cordes';
+  $('#j-grille').hidden = liste !== 'atelier';
 
   // leçon « cordes » : pas d'accompagnement, les cordes à vide et l'accordeur
   const cordes = item.type === 'cordes';
@@ -422,16 +393,10 @@ function quitterLecteur(){
   arreterReference();
 }
 
-/* --- paroles : une ligne par mesure jouée --- */
-const cleParoles = () => courant ? `mes-cordes-paroles:${courant.liste}:${courant.item.id}` : null;
-const parolesDe = () => (lire(cleParoles(), '') || '').split('\n');
-
-/* --- la grille à l'écran : sections, mesures, accords, paroles --- */
+/* --- la grille à l'écran : sections, mesures, accords --- */
 function nomAffiche(nom){ return afficherAccord(lecteur.nomJoue(nom), reglages.solfege); }
 function rendreGrille(){
   const { mesures, sections } = courant.compile;
-  const paroles = parolesDe();
-  const aParoles = paroles.some(l => l.trim());
   const res = MESURES[lecteur.mesureId];
   let html = barreMainDroite();
   sections.forEach((s, si) => {
@@ -440,14 +405,12 @@ function rendreGrille(){
       const m = mesures[k];
       html += `<div class="g-mesure${m.accords.length > 1 ? ' double' : ''}" data-m="${k}">
         <div class="g-accords">${m.accords.map(a => `<b>${esc(nomAffiche(a.nom))}</b>`).join('')}</div>
-        ${aParoles ? `<div class="g-paroles">${esc(paroles[k] || '')}</div>` : ''}
         <div class="g-temps">${Array.from({ length:res.beats }, () => '<i></i>').join('')}</div>
         <span class="g-prog"></span></div>`;
     }
     html += '</div></div>';
   });
   $('#grille-accords').innerHTML = html;
-  $('#grille-accords').classList.toggle('avec-paroles', aParoles);
   $('#grille-accords').scrollTop = 0;
   mesureActive = -1;
 }
@@ -549,15 +512,10 @@ function remplirAide(){
   if (l === 'lecon'){
     h = `<h2>${esc(it.titre)}</h2><p class="objectif"><b>Objectif :</b> ${esc(it.objectif)}</p>${it.texte}${(it.conseils || []).map(CONSEIL).join('')}`;
     if (famille() === 'basse' && it.type !== 'cordes') h += CONSEIL('À la basse : joue la fondamentale de chaque accord (le rond « F » sur le schéma), sur le premier temps, puis suis la ligne de basse de la rythmique. L\'appli joue les accords pour toi.');
-  } else if (l === 'morceau'){
-    h = `<h2>${esc(it.titre)}</h2><p class="muted">${esc(it.origine)} · ${it.mesure} · ${it.bpm} BPM</p>
-      <p>Grille d'accompagnement simplifiée pour chanter : aucune parole n'est incluse. Touche <b>Mes paroles</b> (icône texte) pour coller les tiennes : une ligne par mesure, elles défilent sous les accords.</p>
-      ${it.capo ? CONSEIL(`À la guitare, cette grille se joue avec le capodastre en case ${it.capo} (déjà réglé).`) : ''}
-      ${CONSEIL('Trop grave ou trop aigu pour ta voix ? Réglages → Transposer, un demi-ton à la fois.')}`;
   } else if (l === 'rythme'){
     h = `<h2>${esc(it.titre)}</h2><p>${esc(it.desc)}</p>${lectureRythme(it.style, it.mesure)}`;
   } else {
-    h = `<h2>Atelier</h2><p>Écris ta propre grille dans <b>Mes paroles</b> (icône texte) : les accords, la mesure, puis tes paroles. Choisis la rythmique et le tempo, et chante.</p>`;
+    h = `<h2>Atelier</h2><p>Écris ta propre grille (icône texte) : les accords et la mesure. Choisis ensuite la rythmique et le tempo dans les réglages, et joue par-dessus.</p>`;
   }
   $('#aide-corps').innerHTML = h;
   const accords = courant.compile ? [...new Set(courant.compile.mesures.flatMap(m => m.accords.map(a => a.nom)))] : [];
@@ -723,23 +681,13 @@ function fermerVolets(){
 }
 $('#j-aide').addEventListener('click', () => ouvrirVolet('volet-aide'));
 $('#j-reglages').addEventListener('click', () => ouvrirVolet('volet-reglages'));
-$('#j-paroles').addEventListener('click', () => {
-  if (!courant) return;
-  const estAtelier = courant.liste === 'atelier';
-  $('#atelier-grille').hidden = !estAtelier;
-  if (estAtelier){ $('#atelier-texte').value = atelier.texte; $('#atelier-mesure').value = atelier.mesure; $('#atelier-erreur').textContent = ''; }
-  $('#paroles-texte').value = lire(cleParoles(), '') || '';
-  $('#paroles-texte').placeholder = courant.compile ? courant.compile.mesures.map((m, i) => `Mesure ${i + 1} (${m.accords.map(a => a.nom).join(' ')})`).slice(0, 8).join('\n') + '\n…' : '';
-  $('#paroles-titre').textContent = estAtelier ? 'Ma grille' : 'Mes paroles';
-  ouvrirVolet('volet-paroles');
+$('#j-grille').addEventListener('click', () => {
+  if (!courant || courant.liste !== 'atelier') return;
+  $('#atelier-texte').value = atelier.texte;
+  $('#atelier-mesure').value = atelier.mesure;
+  $('#atelier-erreur').textContent = '';
+  ouvrirVolet('volet-grille');
 });
-$('#paroles-ok').addEventListener('click', () => {
-  ecrire(cleParoles(), $('#paroles-texte').value.replace(/\s+$/, ''));
-  if (courant && courant.compile) rendreGrille();
-  fermerVolets();
-  annoncer('Paroles enregistrées');
-});
-$('#paroles-effacer').addEventListener('click', () => { $('#paroles-texte').value = ''; });
 $('#atelier-appliquer').addEventListener('click', () => {
   const texte = $('#atelier-texte').value.trim();
   const secs = texte.split('\n').map(l => l.replace(/^[^:|]{1,24}:\s*/, '')).filter(l => l.trim());

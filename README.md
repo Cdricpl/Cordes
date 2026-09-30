@@ -1,7 +1,7 @@
 # 🎸 Mes Cordes — guitare, basse et ukulélé
 
 Application web pour apprendre la **guitare électrique**, la **guitare classique**, la
-**basse** et le **ukulélé**, et pour **s'accompagner en chantant**. Même principe et même
+**basse** et le **ukulélé**. Même principe et même
 présentation que *Ma Batterie* : des écrans en cartes colorées, pensés pour un téléphone
 tenu à l'horizontale.
 
@@ -26,29 +26,15 @@ tout s'adapte — schémas d'accords, sons, accordeur, parcours.
 Les sons sont **calculés en direct** (cordes pincées, algorithme de Karplus-Strong) : rien
 à télécharger, l'appli marche hors ligne.
 
-### 🎤 Chanter — 44 accompagnements
-Grilles d'accords qui défilent en rythme, pour chanter en jouant :
-
-- **Chansons traditionnelles** : Au clair de la lune, Frère Jacques, À la claire fontaine,
-  Auprès de ma blonde, Amazing Grace, House of the Rising Sun, Greensleeves…
-- **Pop & folk** : Let It Be, Stand By Me, Knockin' on Heaven's Door, Country Roads,
-  Hallelujah, Wonderwall…
-- **Rock & blues**, **Reggae & soul**, et des **grilles types** (quatre accords de la pop,
-  blues 12 mesures, cadence andalouse, II–V–I…).
-
-Pendant la lecture : la mesure en cours s'allume, le **schéma de l'accord actuel et du
-suivant** s'affichent à droite, et la barre **main droite** montre le grattage (↓ ↑) ou
-l'arpège (p i m a), pas à pas.
-
-**Mes paroles** : l'appli ne contient aucune parole. Touche l'icône « texte » et colle les
-tiennes, une ligne par mesure : elles défilent sous les accords. Elles restent enregistrées
-sur ton appareil.
+### ▶️ Le lecteur
+Les grilles d'accords défilent en rythme : la mesure en cours s'allume, le **schéma de
+l'accord actuel et du suivant** s'affichent à droite, et la barre **main droite** montre le
+grattage (↓ ↑) ou l'arpège (p i m a), pas à pas.
 
 Réglages : rythmique (noires, croches, folk, pop, ballade, rock, reggae, country, valse,
-6/8, 12/8, shuffle, arpège…), grattage ou arpège, **transposition** (pour ta voix),
-**capodastre**, power chords, son saturé, noms en solfège (Do Ré Mi), volume des accords et
-de la basse, décompte, boucle, métronome. Un clic sur une section (couplet, refrain) la
-joue seule, en boucle.
+6/8, 12/8, shuffle, arpège…), grattage ou arpège, **transposition**, **capodastre**, power
+chords, son saturé, noms en solfège (Do Ré Mi), volume des accords et de la basse,
+décompte, boucle, métronome. Un clic sur une section la joue seule, en boucle.
 
 ### 📚 Parcours — 24 leçons en 4 niveaux
 Premiers pas (accorder, premier accord, changer d'accord, gratter), les chansons (grille
@@ -65,7 +51,7 @@ la leçon propose une grille adaptée.
 - **Accordeur** : au micro, corde par corde, avec l'aiguille et le conseil « serre / desserre » ;
   on peut aussi écouter la note juste de chaque corde.
 - **Atelier** : écris ta propre grille (`Couplet: C | G | Am | F`), choisis la mesure, la
-  rythmique et le tempo, colle tes paroles.
+  rythmique et le tempo, et joue par-dessus.
 
 La **progression** (minutes par jour, jours d'affilée, leçons, éléments « à travailler » et
 « acquis ») est enregistrée dans le navigateur.
@@ -85,14 +71,14 @@ js/audio.js         synthèse des cordes, ampli, métronome
 js/rythmes.js       rythmiques et compilation des grilles
 js/player.js        lecteur (planification audio précise)
 js/hauteur.js       détection de hauteur (accordeur)
-js/songs.js         morceaux     js/lessons.js   parcours
+js/lessons.js       parcours
 js/diagrammes.js    schémas SVG  js/app.js       interface
 ```
 
 - `node build.js` → `mes-cordes.html`, un fichier unique autonome.
 - `node build.js --site` → `site/`, installable sur téléphone (manifest, service worker,
   icônes). Netlify l'exécute tout seul (`netlify.toml`).
-- `node outils/verifier.mjs` → vérifie que chaque accord de chaque morceau et leçon a un
+- `node outils/verifier.mjs` → vérifie que chaque accord des leçons et des rythmiques a un
   doigté sur chaque instrument dans les 12 tonalités, que les rythmiques ont la bonne
   longueur et que l'accordeur retrouve les bonnes notes.
 - À chaque livraison, augmenter `js/version.js`.
