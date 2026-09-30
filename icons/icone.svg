@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="mb-fond" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffa447"/>
+      <stop offset="1" stop-color="#f5426c"/>
+    </linearGradient>
+    <linearGradient id="mb-corps" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset=".55" stop-color="#fff"/>
+      <stop offset="1" stop-color="#ffe2e8"/>
+    </linearGradient>
+    <linearGradient id="mb-peau" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff6ef"/>
+      <stop offset="1" stop-color="#ffe0d6"/>
+    </linearGradient>
+    <clipPath id="mb-forme"><rect width="512" height="512" rx="116"/></clipPath>
+  </defs>
+  <!-- fond : carré arrondi en dégradé, avec un disque de lumière -->
+  <rect width="512" height="512" rx="116" fill="url(#mb-fond)"/>
+  <circle cx="420" cy="70" r="230" fill="#fff" opacity=".14" clip-path="url(#mb-forme)"/>
+  <!-- ombre portée -->
+  <ellipse cx="256" cy="404" rx="156" ry="22" fill="#7a0f2c" opacity=".22"/>
+  <!-- caisse claire -->
+  <path d="M100 262v102a156 46 0 0 0 312 0V262z" fill="url(#mb-corps)"/>
+  <path d="M100 364a156 46 0 0 0 312 0" fill="none" stroke="#f5426c" stroke-width="12" opacity=".9"/>
+  <g stroke="#f5426c" stroke-width="10" stroke-linecap="round" opacity=".85">
+    <line x1="140" y1="300" x2="140" y2="372"/>
+    <line x1="198" y1="306" x2="198" y2="384"/>
+    <line x1="256" y1="308" x2="256" y2="388"/>
+    <line x1="314" y1="306" x2="314" y2="384"/>
+    <line x1="372" y1="300" x2="372" y2="372"/>
+  </g>
+  <ellipse cx="256" cy="262" rx="156" ry="46" fill="url(#mb-peau)" stroke="#fff" stroke-width="14"/>
+  <!-- baguettes croisées, pointes posées sur la peau -->
+  <g stroke="#fff" stroke-width="22" stroke-linecap="round">
+    <line x1="126" y1="64" x2="300" y2="246"/>
+    <line x1="386" y1="64" x2="212" y2="246"/>
+  </g>
+  <circle cx="300" cy="246" r="16" fill="#fff"/>
+  <circle cx="212" cy="246" r="16" fill="#fff"/>
+</svg>
