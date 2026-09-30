@@ -189,9 +189,9 @@ function tampon(timbre, midi, variante){
 }
 
 /* voix en cours, par couche : on étouffe l'accord précédent quand un nouveau arrive */
-const voix = { accords:[], basse:[] };
+const voix = { accords:[], basse:[], libre:[] };
 export function etouffer(couche, t, fondu = 0.03){
-  for (const v of voix[couche]){
+  for (const v of voix[couche] || []){
     try {
       v.gain.gain.cancelScheduledValues(t);
       v.gain.gain.setValueAtTime(v.gain.gain.value, t);

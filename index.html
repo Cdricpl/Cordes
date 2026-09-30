@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mes Cordes</title>
+<meta name="description" content="Guitare électrique, guitare classique, basse et ukulélé : parcours progressif, accords, accordeur et accompagnements pour chanter.">
+<meta name="theme-color" content="#f2f3f8">
+<link rel="manifest" href="manifest.webmanifest" data-pwa>
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" data-pwa>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Cordes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/cordes.css">
+<link rel="icon" href="icons/icone.svg" data-favicon>
+</head>
+<body>
+
+<!-- Pictogrammes -->
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <symbol id="i-retour" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-maison" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7M6.5 9.5V20h11V9.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-prec" viewBox="0 0 24 24"><path d="M14 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-suiv" viewBox="0 0 24 24"><path d="M10 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-aide" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .9-1 1.6v.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17" r="1.2" fill="currentColor"/></symbol>
+  <symbol id="i-reglages" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="15" cy="7" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="17" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="i-metronome" viewBox="0 0 24 24"><path d="M8.5 3.5h7L19 21H5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 16l5-8.5M7 16h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-guitare" viewBox="0 0 24 24"><path d="M14.5 9.5l5-5M18 3l3 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M13 8.5c-1.6-1-3.6-.6-4.6.7-.5.6-.5 1.4-1.3 1.7-1.1.4-2.4.4-3.3 1.4-1.6 1.9-.9 5 1.2 7s5 2.8 6.9 1.2c1-.9 1-2.2 1.4-3.3.3-.8 1.1-.8 1.7-1.3 1.3-1 1.7-3 .7-4.6" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="9.5" cy="14.5" r="1.6" fill="currentColor"/></symbol>
+  <symbol id="i-basse" viewBox="0 0 24 24"><path d="M3 15h13M3 18h13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M16 12.5c2.5-1 5-.5 5 2s-2.5 4-5 3z" fill="currentColor"/></symbol>
+  <symbol id="i-micro" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-texte" viewBox="0 0 24 24"><path d="M4 6h16M4 11h16M4 16h10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  <symbol id="i-reinit" viewBox="0 0 24 24"><path d="M5 12a7 7 0 1 0 2.1-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M4.5 3.5V8H9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 4.8v14.4c0 .8.9 1.3 1.6.8l11-7.2c.6-.4.6-1.2 0-1.6l-11-7.2c-.7-.5-1.6 0-1.6.8z" fill="currentColor"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></symbol>
+  <symbol id="i-installer" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 20h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-fermer" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+  <symbol id="i-flamme" viewBox="0 0 24 24"><path d="M12 22c4 0 7-2.8 7-6.8 0-4.3-3.6-6.3-4.3-10.2-2.4 1.6-3.5 4-3.2 6.6-1.2-.6-2-1.8-2.2-3.2C7.2 10 5 12.3 5 15.2 5 19.2 8 22 12 22z" fill="currentColor"/></symbol>
+  <symbol id="i-drapeau" viewBox="0 0 24 24"><path d="M6 21V4h11.5l-2.8 4.2 2.8 4.3H6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-coche" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</svg>
+
+<div id="appli">
+
+<!-- ================= Accueil ================= -->
+<section class="ecran" id="ecran-accueil" aria-labelledby="titre-accueil">
+  <header class="entete">
+    <div class="marque">
+      <span class="logo" aria-hidden="true"><img class="logo-img" src="icons/icone.svg" alt="" width="36" height="36"></span>
+      <h1 id="titre-accueil" class="mot">Mes Cordes</h1>
+      <span class="version" id="version"></span>
+    </div>
+    <div class="entete-droite">
+      <div class="choix-inst" id="choix-inst" role="group" aria-label="Mon instrument"></div>
+      <a class="pastille-stat" href="#/progression" id="stat-jour" title="Ma progression">
+        <svg class="ico" aria-hidden="true"><use href="#i-flamme"/></svg><span id="streak-text">0 min</span>
+      </a>
+      <button class="btn-plat" id="btn-installer" type="button" hidden>
+        <svg class="ico" aria-hidden="true"><use href="#i-installer"/></svg>Installer
+      </button>
+    </div>
+  </header>
+
+  <div class="accueil-grille cordes">
+    <div class="carte-cat grande c-parcours">
+      <div class="cat-illus" id="illus-parcours"></div>
+      <div class="cat-texte">
+        <h2><a href="#/parcours" class="carte-lien">Parcours</a></h2>
+        <p id="parcours-resume"></p>
+        <div class="jauge fine" aria-hidden="true"><i id="parcours-jauge"></i></div>
+      </div>
+      <a class="cta" id="cta-continuer" href="#/parcours">
+        <svg class="ico" aria-hidden="true"><use href="#i-play"/></svg><span id="cta-texte">Commencer</span>
+      </a>
+    </div>
+    <a class="carte-cat c-morceaux" href="#/morceaux">
+      <div class="cat-illus" id="illus-morceaux"></div>
+      <div class="cat-texte"><h2>Chanter</h2><p id="compte-morceaux"></p></div>
+    </a>
+    <a class="carte-cat c-rythmes" href="#/accords">
+      <div class="cat-illus" id="illus-accords"></div>
+      <div class="cat-texte"><h2>Accords</h2><p id="compte-accords"></p></div>
+    </a>
+    <a class="carte-cat c-breaks" href="#/rythmiques">
+      <div class="cat-illus" id="illus-rythmes"></div>
+      <div class="cat-texte"><h2>Rythmiques</h2><p id="compte-rythmes"></p></div>
+    </a>
+    <a class="carte-cat c-rudiments" href="#/accordeur">
+      <div class="cat-illus" id="illus-accordeur"></div>
+      <div class="cat-texte"><h2>Accordeur</h2><p>Au micro, corde par corde.</p></div>
+    </a>
+    <a class="carte-cat c-atelier" href="#/jouer/atelier/perso">
+      <div class="cat-illus" id="illus-atelier"></div>
+      <div class="cat-texte"><h2>Atelier</h2><p>Ta grille, tes paroles.</p></div>
+    </a>
+  </div>
+</section>
+
+<!-- ================= Listes ================= -->
+<section class="ecran" id="ecran-liste" hidden aria-labelledby="liste-titre">
+  <header class="entete">
+    <a class="rond" id="liste-retour" href="#/" aria-label="Retour"><svg class="ico" aria-hidden="true"><use href="#i-retour"/></svg></a>
+    <div class="entete-titres">
+      <p class="surtitre" id="liste-sur"></p>
+      <h1 id="liste-titre"></h1>
+    </div>
+    <div class="entete-droite">
+      <div class="sauts" id="liste-sauts" role="group" aria-label="Aller à"></div>
+      <a class="rond" href="#/" aria-label="Accueil"><svg class="ico" aria-hidden="true"><use href="#i-maison"/></svg></a>
+    </div>
+  </header>
+  <div class="liste-corps" id="liste-corps"></div>
+</section>
+
+<!-- ================= Accordeur ================= -->
+<section class="ecran" id="ecran-accordeur" hidden aria-labelledby="acc-titre">
+  <header class="entete">
+    <a class="rond" href="#/" aria-label="Accueil"><svg class="ico" aria-hidden="true"><use href="#i-retour"/></svg></a>
+    <div class="entete-titres">
+      <p class="surtitre" id="acc-sur"></p>
+      <h1 id="acc-titre">Accordeur</h1>
+    </div>
+    <div class="entete-droite">
+      <button class="btn-plat accent" id="acc-micro" type="button"><svg class="ico" aria-hidden="true"><use href="#i-micro"/></svg><span>Écouter</span></button>
+    </div>
+  </header>
+  <div class="accordeur">
+    <div class="acc-cadran">
+      <svg viewBox="0 0 300 170" class="acc-svg" aria-hidden="true">
+        <path d="M30 150a120 120 0 0 1 240 0" fill="none" class="acc-arc"/>
+        <path d="M137 31a120 120 0 0 1 26 0" fill="none" class="acc-juste"/>
+        <g id="acc-graduations"></g>
+        <line id="acc-aiguille" x1="150" y1="150" x2="150" y2="42" class="acc-aiguille"/>
+        <circle cx="150" cy="150" r="9" class="acc-pivot"/>
+      </svg>
+      <div class="acc-note"><b id="acc-note">–</b><span id="acc-cents"></span></div>
+      <p class="acc-conseil" id="acc-conseil" aria-live="polite">Touche « Écouter » puis joue une corde à vide.</p>
+    </div>
+    <div class="acc-cordes">
+      <p class="muted small">Touche une corde pour entendre la note juste.</p>
+      <div id="acc-cordes"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= Lecteur ================= -->
+<section class="ecran ecran-jouer" id="ecran-jouer" hidden aria-labelledby="j-titre">
+  <header class="barre-jeu">
+    <a class="rond" id="j-retour" href="#/" aria-label="Retour à la liste"><svg class="ico" aria-hidden="true"><use href="#i-retour"/></svg></a>
+    <div class="j-nav">
+      <a class="rond petit" id="j-prec" href="#/" aria-label="Précédent"><svg class="ico" aria-hidden="true"><use href="#i-prec"/></svg></a>
+      <div class="j-titres">
+        <p class="surtitre" id="j-sur"></p>
+        <h1 id="j-titre"></h1>
+      </div>
+      <a class="rond petit" id="j-suiv" href="#/" aria-label="Suivant"><svg class="ico" aria-hidden="true"><use href="#i-suiv"/></svg></a>
+    </div>
+    <div class="j-droite">
+      <div class="statut-seg" role="group" aria-label="Où j'en suis">
+        <button class="statut-btn travail" id="st-travail" type="button" aria-pressed="false" title="À travailler"><svg class="ico" aria-hidden="true"><use href="#i-drapeau"/></svg><span>À travailler</span></button>
+        <button class="statut-btn acquis" id="st-acquis" type="button" aria-pressed="false" title="Acquis"><svg class="ico" aria-hidden="true"><use href="#i-coche"/></svg><span>Acquis</span></button>
+      </div>
+      <button class="rond" id="j-paroles" type="button" aria-label="Mes paroles" title="Mes paroles"><svg class="ico" aria-hidden="true"><use href="#i-texte"/></svg></button>
+      <button class="rond" id="j-aide" type="button" aria-label="Explications"><svg class="ico" aria-hidden="true"><use href="#i-aide"/></svg></button>
+      <button class="rond" id="j-reglages" type="button" aria-label="Réglages"><svg class="ico" aria-hidden="true"><use href="#i-reglages"/></svg></button>
+    </div>
+  </header>
+
+  <div class="sections-bar" id="sections-bar" hidden></div>
+
+  <main class="partition-zone jeu-cordes">
+    <div class="papier grille-papier">
+      <div class="grille-accords" id="grille-accords"></div>
+    </div>
+    <aside class="diag-zone" id="diag-zone">
+      <div class="diag-actuel" id="diag-actuel"></div>
+      <div class="diag-suivant"><span class="surtitre">Ensuite</span><div id="diag-suivant"></div></div>
+    </aside>
+    <div class="count-overlay" id="count-overlay" hidden aria-live="assertive"><span></span></div>
+  </main>
+
+  <footer class="barre-transport">
+    <div class="t-bascules">
+      <button class="bascule" id="opt-click" type="button" aria-pressed="false" aria-label="Métronome" title="Métronome"><svg class="ico" aria-hidden="true"><use href="#i-metronome"/></svg></button>
+      <button class="bascule actif" id="opt-accords" type="button" aria-pressed="true" aria-label="Entendre les accords" title="Entendre les accords"><svg class="ico" aria-hidden="true"><use href="#i-guitare"/></svg></button>
+      <button class="bascule" id="opt-basse" type="button" aria-pressed="false" aria-label="Entendre la basse" title="Entendre la basse"><svg class="ico" aria-hidden="true"><use href="#i-basse"/></svg></button>
+    </div>
+    <div class="t-tempo" role="group" aria-label="Tempo">
+      <button class="rond petit" id="tempo-moins" type="button" aria-label="Ralentir">−</button>
+      <div class="bpm-aff"><output id="bpm-val" for="bpm">80</output><span>BPM</span></div>
+      <button class="rond petit" id="tempo-plus" type="button" aria-label="Accélérer">+</button>
+      <input type="range" id="bpm" min="40" max="200" value="80" aria-label="Tempo en battements par minute">
+      <button class="rond petit" id="tempo-reset" type="button" aria-label="Revenir au tempo conseillé" title="Tempo conseillé"><svg class="ico" aria-hidden="true"><use href="#i-reinit"/></svg></button>
+    </div>
+    <button class="lecture" id="btn-play" type="button" aria-label="Lecture"><svg class="ico" aria-hidden="true"><use id="play-ico" href="#i-play"/></svg></button>
+  </footer>
+</section>
+
+<!-- ================= Volets ================= -->
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<div class="voile" id="voile" hidden></div>
+
+<aside class="volet" id="volet-aide" hidden role="dialog" aria-modal="true" aria-labelledby="aide-titre">
+  <header class="volet-tete">
+    <h2 id="aide-titre">Explications</h2>
+    <button class="rond petit" type="button" data-fermer aria-label="Fermer"><svg class="ico" aria-hidden="true"><use href="#i-fermer"/></svg></button>
+  </header>
+  <div class="volet-corps">
+    <div id="aide-corps" class="texte"></div>
+    <h3>Les accords du morceau</h3>
+    <div id="aide-accords" class="schemas"></div>
+    <p class="muted small">Touche un schéma pour entendre l'accord.</p>
+  </div>
+</aside>
+
+<aside class="volet" id="volet-paroles" hidden role="dialog" aria-modal="true" aria-labelledby="paroles-titre">
+  <header class="volet-tete">
+    <h2 id="paroles-titre">Mes paroles</h2>
+    <button class="rond petit" type="button" data-fermer aria-label="Fermer"><svg class="ico" aria-hidden="true"><use href="#i-fermer"/></svg></button>
+  </header>
+  <div class="volet-corps">
+    <div id="atelier-grille" hidden>
+      <h3>Ma grille</h3>
+      <p class="muted small">Une barre « | » sépare les mesures. Deux accords dans une mesure se la partagent. Une ligne par section, « Refrain: » pour la nommer.</p>
+      <textarea id="atelier-texte" class="zone-texte" rows="5" spellcheck="false" aria-label="Grille d'accords"></textarea>
+      <label class="ligne-reglage"><span>Mesure</span>
+        <select id="atelier-mesure" class="choix"><option>4/4</option><option>3/4</option><option>2/4</option><option>6/8</option><option>12/8</option></select>
+      </label>
+      <div class="rang-boutons"><button class="btn-plat accent" id="atelier-appliquer" type="button">Appliquer</button></div>
+      <p class="muted small" id="atelier-erreur" role="alert"></p>
+    </div>
+    <h3>Paroles</h3>
+    <p class="muted small">Colle les paroles de la chanson : une ligne par mesure, elles s'affichent sous les accords et défilent avec la musique. Une ligne vide = une mesure sans paroles. Elles restent sur cet appareil.</p>
+    <textarea id="paroles-texte" class="zone-texte" rows="14" aria-label="Paroles, une ligne par mesure"></textarea>
+    <div class="rang-boutons">
+      <button class="btn-plat accent" id="paroles-ok" type="button">Enregistrer</button>
+      <button class="btn-plat" id="paroles-effacer" type="button">Effacer</button>
+    </div>
+  </div>
+</aside>
+
+<aside class="volet" id="volet-reglages" hidden role="dialog" aria-modal="true" aria-labelledby="reglages-titre">
+  <header class="volet-tete">
+    <h2 id="reglages-titre">Réglages</h2>
+    <button class="rond petit" type="button" data-fermer aria-label="Fermer"><svg class="ico" aria-hidden="true"><use href="#i-fermer"/></svg></button>
+  </header>
+  <div class="volet-corps">
+    <h3>Mon instrument</h3>
+    <div class="choix-inst large" id="choix-inst-lecteur" role="group" aria-label="Mon instrument"></div>
+    <label class="inter" id="ligne-sat"><span>Son saturé (guitare électrique)</span><input type="checkbox" id="opt-sat" role="switch" checked><i></i></label>
+    <label class="inter" id="ligne-pw"><span>Power chords</span><input type="checkbox" id="opt-pw" role="switch"><i></i></label>
+
+    <h3>Accompagnement</h3>
+    <label class="ligne-reglage"><span>Rythmique</span><select id="opt-style" class="choix"></select></label>
+    <div class="seg" id="opt-mode" role="group" aria-label="Main droite">
+      <button class="seg-btn actif" data-mode="grat" type="button" aria-pressed="true">Grattage</button>
+      <button class="seg-btn" data-mode="arp" type="button" aria-pressed="false">Arpège</button>
+    </div>
+    <p class="muted small" id="style-desc"></p>
+
+    <h3>Tonalité</h3>
+    <label class="ligne-reglage"><span>Transposer</span>
+      <span class="pas-a-pas"><button class="rond petit" id="transpo-moins" type="button" aria-label="Un demi-ton plus bas">−</button><output id="transpo-val">0</output><button class="rond petit" id="transpo-plus" type="button" aria-label="Un demi-ton plus haut">+</button></span>
+    </label>
+    <label class="ligne-reglage"><span>Capodastre</span>
+      <span class="pas-a-pas"><button class="rond petit" id="capo-moins" type="button" aria-label="Capo plus bas">−</button><output id="capo-val">0</output><button class="rond petit" id="capo-plus" type="button" aria-label="Capo plus haut">+</button></span>
+    </label>
+    <p class="muted small" id="capo-note"></p>
+
+    <h3>Lecture</h3>
+    <label class="inter"><span>Décompte avant de jouer</span><input type="checkbox" id="opt-count" role="switch" checked><i></i></label>
+    <label class="inter"><span>Jouer en boucle</span><input type="checkbox" id="opt-loop" role="switch" checked><i></i></label>
+    <label class="inter"><span>Noms en solfège (Do, Ré, Mi…)</span><input type="checkbox" id="opt-solfege" role="switch"><i></i></label>
+    <label class="ligne-reglage"><span>Volume des accords</span><input type="range" id="vol-accords" min="0" max="1.5" step="0.05" value="1"></label>
+    <label class="ligne-reglage"><span>Volume de la basse</span><input type="range" id="vol-basse" min="0" max="1.5" step="0.05" value="1"></label>
+
+    <h3>Clavier</h3>
+    <table class="keys">
+      <tr><td><kbd>Espace</kbd></td><td>Lecture / arrêt</td></tr>
+      <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>Précédent / suivant</td></tr>
+      <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>Tempo</td></tr>
+    </table>
+    <p class="muted small credit">Sons calculés en direct (cordes pincées, algorithme de Karplus-Strong) : aucun fichier à télécharger.</p>
+    <p class="muted small" id="version-detail"></p>
+  </div>
+</aside>
+
+<div class="modal" id="install-modal" hidden role="dialog" aria-modal="true" aria-labelledby="install-titre">
+  <div class="modal-box install-box">
+    <img class="install-icone" src="icons/icone-192.png" width="84" height="84" alt="">
+    <div class="install-texte">
+      <h2 id="install-titre">Installe Mes Cordes</h2>
+      <p>Une icône sur ton écran d'accueil, l'appli en plein écran, et elle marche même sans connexion.</p>
+      <ol class="etapes" id="install-ios" hidden>
+        <li>Touche le bouton <b>Partager</b> de Safari.</li>
+        <li>Choisis <b>Sur l'écran d'accueil</b>, puis <b>Ajouter</b>.</li>
+      </ol>
+      <p class="muted small" id="install-autre" hidden>Ouvre le menu du navigateur (⋮) et choisis <b>Installer l'application</b>.</p>
+      <div class="rang-boutons">
+        <button class="btn-plat accent" id="install-oui" type="button" hidden>Installer</button>
+        <button class="btn-plat" id="install-non" type="button">Plus tard</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /appli -->
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

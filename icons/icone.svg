@@ -1,41 +1,25 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <linearGradient id="mb-fond" x1="0" y1="0" x2="1" y2="1">
+    <linearGradient id="mc-fond" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#ffa447"/>
       <stop offset="1" stop-color="#f5426c"/>
     </linearGradient>
-    <linearGradient id="mb-corps" x1="0" y1="0" x2="1" y2="0">
+    <linearGradient id="mc-corps" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#fff"/>
-      <stop offset=".55" stop-color="#fff"/>
       <stop offset="1" stop-color="#ffe2e8"/>
     </linearGradient>
-    <linearGradient id="mb-peau" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#fff6ef"/>
-      <stop offset="1" stop-color="#ffe0d6"/>
-    </linearGradient>
-    <clipPath id="mb-forme"><rect width="512" height="512" rx="116"/></clipPath>
+    <clipPath id="mc-forme"><rect width="512" height="512" rx="116"/></clipPath>
   </defs>
-  <!-- fond : carré arrondi en dégradé, avec un disque de lumière -->
-  <rect width="512" height="512" rx="116" fill="url(#mb-fond)"/>
-  <circle cx="420" cy="70" r="230" fill="#fff" opacity=".14" clip-path="url(#mb-forme)"/>
-  <!-- ombre portée -->
-  <ellipse cx="256" cy="404" rx="156" ry="22" fill="#7a0f2c" opacity=".22"/>
-  <!-- caisse claire -->
-  <path d="M100 262v102a156 46 0 0 0 312 0V262z" fill="url(#mb-corps)"/>
-  <path d="M100 364a156 46 0 0 0 312 0" fill="none" stroke="#f5426c" stroke-width="12" opacity=".9"/>
-  <g stroke="#f5426c" stroke-width="10" stroke-linecap="round" opacity=".85">
-    <line x1="140" y1="300" x2="140" y2="372"/>
-    <line x1="198" y1="306" x2="198" y2="384"/>
-    <line x1="256" y1="308" x2="256" y2="388"/>
-    <line x1="314" y1="306" x2="314" y2="384"/>
-    <line x1="372" y1="300" x2="372" y2="372"/>
+  <rect width="512" height="512" rx="116" fill="url(#mc-fond)"/>
+  <circle cx="420" cy="70" r="230" fill="#fff" opacity=".14" clip-path="url(#mc-forme)"/>
+  <g transform="rotate(-38 256 256)">
+    <rect x="236" y="36" width="40" height="230" rx="8" fill="#fff"/>
+    <rect x="226" y="10" width="60" height="58" rx="14" fill="#fff"/>
+    <path d="M256 236c-40 0-78 18-78 64 0 24 14 36 14 52 0 16-26 30-26 64 0 44 42 70 90 70s90-26 90-70c0-34-26-48-26-64 0-16 14-28 14-52 0-46-38-64-78-64z" fill="url(#mc-corps)"/>
+    <circle cx="256" cy="330" r="30" fill="#f5426c" opacity=".9"/>
+    <rect x="222" y="410" width="68" height="14" rx="5" fill="#f5426c" opacity=".85"/>
+    <g stroke="#f5426c" stroke-width="3" opacity=".75">
+      <line x1="246" y1="40" x2="246" y2="416"/><line x1="256" y1="40" x2="256" y2="416"/><line x1="266" y1="40" x2="266" y2="416"/>
+    </g>
   </g>
-  <ellipse cx="256" cy="262" rx="156" ry="46" fill="url(#mb-peau)" stroke="#fff" stroke-width="14"/>
-  <!-- baguettes croisées, pointes posées sur la peau -->
-  <g stroke="#fff" stroke-width="22" stroke-linecap="round">
-    <line x1="126" y1="64" x2="300" y2="246"/>
-    <line x1="386" y1="64" x2="212" y2="246"/>
-  </g>
-  <circle cx="300" cy="246" r="16" fill="#fff"/>
-  <circle cx="212" cy="246" r="16" fill="#fff"/>
 </svg>
