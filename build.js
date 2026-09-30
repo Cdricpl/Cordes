@@ -5,7 +5,7 @@
 const fs = require('fs');
 
 const ORDRE = [
-  'js/version.js', 'js/theorie.js', 'js/instruments.js', 'js/hauteur.js', 'js/audio.js', 'js/accords.js',
+  'js/version.js', 'js/theorie.js', 'js/instruments.js', 'js/hauteur.js', 'js/sons.js', 'js/audio.js', 'js/accords.js',
   'js/rythmes.js', 'js/player.js', 'js/lessons.js', 'js/diagrammes.js', 'js/progress.js', 'js/app.js'
 ];
 

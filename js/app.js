@@ -1,13 +1,13 @@
 /* Assemblage de l'interface : accueil, listes, lecteur d'accompagnement, accordeur.
  * Navigation par l'adresse (#/…), comme Ma Batterie. */
 import { INSTRUMENTS, ORDRE_INSTRUMENTS } from './instruments.js';
-import { initAudio, reprendreAudio, ctxAudio, gratter, note, setSaturation, setCouche, jouerReference, arreterReference, etoufferTout } from './audio.js';
+import { initAudio, reprendreAudio, ctxAudio, gratter, note, setSaturation, setCouche, jouerReference, arreterReference, etoufferTout, frapper } from './audio.js';
 import { STYLES, STYLES_ORDRE, MESURES, stylesPour, compilerSections, lireGrille } from './rythmes.js';
 import { forme, notesDe } from './accords.js';
 import { analyserAccord, afficherAccord, transposer, nomClasse, midiEnFreq } from './theorie.js';
 import { detecterHauteur, noteProche, cordeProche } from './hauteur.js';
-import { LECONS, NIVEAUX, sectionsPour } from './lessons.js';
-import { schemaAccord, cordesAVide, illusInstrument, ILLUS } from './diagrammes.js';
+import { PARCOURS, TOUTES_LECONS, leconsDe, niveauxDe } from './lessons.js';
+import { schemaAccord, schemaPositions, cordesAVide, illusInstrument, ILLUS } from './diagrammes.js';
 import { Lecteur, notesBasse } from './player.js';
 import * as P from './progress.js';
 import { VERSION, DATE_VERSION } from './version.js';
@@ -30,19 +30,29 @@ $('#version').textContent = 'v' + VERSION;
 $('#version-detail').textContent = `Version ${VERSION} du ${DATE_VERSION.split('-').reverse().join('/')}`;
 
 /* ================= contenus ================= */
-const NOMS_NIVEAUX = ['', 'Débutant', 'Débutant +', 'Intermédiaire', 'Confirmé'];
-const NIV_GRAD = NIVEAUX.map(n => n.grad);
+const NIV_GRAD = [['#34d399', '#059669'], ['#38bdf8', '#2563eb'], ['#fbbf24', '#e8590c'], ['#f472b6', '#be185d']];
 const gradStyle = g => `--c1:${g[0]};--c2:${g[1]}`;
 const CONSEIL = t => `<div class="tip"><span class="tip-lbl">Conseil</span><p>${t}</p></div>`;
 
-/* grille de démonstration d'une rythmique, selon sa mesure */
-const GRILLE_DEMO = { '4/4':'C | G | Am | F', '3/4':'C | C | G | G', '2/4':'C | G | C | G', '6/8':'Am | F | C | G', '12/8':'A7 | D7 | A7 | E7' };
-const RYTHMIQUES = STYLES_ORDRE.map(id => {
-  const s = STYLES[id];
-  const mesure = ['4/4', '3/4', '6/8', '12/8', '2/4'].find(m => s[m]);
-  return { id, titre:s.nom, niveau:s.niveau, desc:s.desc, mesure, style:id, bpm:mesure === '6/8' || mesure === '12/8' ? 66 : 84,
-    mode:id === 'arpege' ? 'arp' : 'grat', sections:[{ nom:'Grille', mesures:GRILLE_DEMO[mesure], rep:2 }] };
-});
+/* Rythmiques : celles qui conviennent à l'instrument choisi, jouées sur une grille de démonstration.
+ * À la basse, ce sont des grooves : on entend (et on voit) la ligne de basse de chacune. */
+const GRILLE_DEMO = { '4/4':'C | G | Am | F', '3/4':'C | C | G | G', '2/4':'C | G | C | G', '6/8':'Am | F | C | G', '9/8':'Am | Dm | E | Am', '12/8':'A7 | D7 | A7 | E7' };
+const GRILLE_BASSE = { '4/4':'A | A | D | E', '3/4':'C | C | G | G', '6/8':'Am | F | C | G', '12/8':'A7 | D7 | A7 | E7' };
+const cacheRythmiques = {};
+function rythmiquesDe(instId){
+  if (cacheRythmiques[instId]) return cacheRythmiques[instId];
+  const basse = INSTRUMENTS[instId].famille === 'basse';
+  return cacheRythmiques[instId] = STYLES_ORDRE.filter(id => STYLES[id].pour.includes(instId)).map(id => {
+    const s = STYLES[id];
+    const mesure = ['4/4', '3/4', '6/8', '9/8', '12/8', '2/4'].find(m => s[m]);
+    return { id, titre:s.nom, niveau:s.niveau, desc:s.desc, mesure, style:id,
+      bpm:mesure === '6/8' || mesure === '12/8' || mesure === '9/8' ? 66 : s.niveau >= 3 ? 92 : 84,
+      mode:s.type === 'arp' ? 'arp' : 'grat',
+      couches:{ batterie:instId !== 'guitare_classique', basse:true, accords:true },
+      sections:[{ nom:'Grille', mesures:(basse && GRILLE_BASSE[mesure]) || GRILLE_DEMO[mesure], rep:2 }] };
+  }).sort((a, b) => a.niveau - b.niveau);
+}
+const RYTHMIQUES_TOUTES = () => ORDRE_INSTRUMENTS.flatMap(i => rythmiquesDe(i));
 
 /* Atelier : grille personnelle, mémorisée */
 const CLE_ATELIER = 'mes-cordes-atelier';
@@ -56,13 +66,16 @@ function sectionsAtelier(){
 }
 
 const LISTES = {
-  lecon:    { nom:'Leçon',     items:() => LECONS,                        retour:it => '#/parcours/' + it.niveau },
-  rythme:   { nom:'Rythmique', items:() => RYTHMIQUES,                    retour:() => '#/rythmiques' },
-  atelier:  { nom:'Atelier',   items:() => [atelier],                     retour:() => '#/' }
+  lecon:    { nom:'Leçon',     items:() => leconsDe(reglages.instrument),          retour:it => '#/parcours/' + it.niveau },
+  rythme:   { nom:'Rythmique', items:() => rythmiquesDe(reglages.instrument),      retour:() => '#/rythmiques' },
+  atelier:  { nom:'Atelier',   items:() => [atelier],                              retour:() => '#/' }
 };
-const SOURCES = { lecon:() => LECONS, rythme:() => RYTHMIQUES, atelier:() => [atelier] };
+const SOURCES = { lecon:() => TOUTES_LECONS, rythme:RYTHMIQUES_TOUTES, atelier:() => [atelier] };
 const lienJouer = (liste, it) => `#/jouer/${liste}/${encodeURIComponent(it.id)}`;
-const prochaineLecon = () => LECONS.find(l => !P.estFaite(l.id)) || LECONS[LECONS.length - 1];
+const LECONS = () => leconsDe(reglages.instrument);
+const prochaineLecon = () => LECONS().find(l => !P.estFaite(l.id)) || LECONS()[LECONS().length - 1];
+/* instrument d'une leçon (chaque instrument a son parcours) */
+const instrumentDe = lecon => Object.keys(PARCOURS).find(i => PARCOURS[i].lecons.includes(lecon));
 
 /* ================= lecteur ================= */
 let courant = null;             // { liste, item, sections, compile }
@@ -72,7 +85,11 @@ let chrono = null;
 const lecteur = new Lecteur({
   onCompte: n => afficherDecompte(n),
   onMesure: m => { masquerDecompte(); activerMesure(m); },
-  onPas: c => { if (c.accord !== accordAffiche) majDiagrammes(c.mesure, c.p); allumerPas(c.p); },
+  onPas: c => {
+    const me = courant && courant.compile && courant.compile.mesures[c.mesure];
+    if (me && me.tab) allumerTab(c);
+    else { if (c.accord !== accordAffiche) majDiagrammes(c.mesure, c.p); allumerPas(c.p, c.accord); }
+  },
   onPos: (pos, c) => majProgression(pos, c),
   onBoucle: () => { if (courant) P.noterTempo(courant.liste + ':' + courant.item.id, lecteur.bpm); },
   onTempo: bpm => { $('#bpm').value = bpm; $('#bpm-val').textContent = bpm; },
@@ -126,10 +143,18 @@ function changerInstrument(id){
   sauverReglages();
   majChoixInstrument();
   annoncer(INSTRUMENTS[id].nom);
-  if (courant){
+  if (courant && courant.liste === 'lecon'){
+    // chaque instrument a sa méthode : on passe au parcours du nouvel instrument
+    fermerVolets();
+    location.hash = '#/parcours';
+  } else if (courant && courant.liste === 'rythme' && !STYLES[courant.item.style].pour.includes(id)){
+    fermerVolets();
+    location.hash = '#/rythmiques';
+  } else if (courant){
     const enCours = lecteur.enLecture;
     if (enCours) lecteur.arreter();
-    chargerElement(courant.liste, courant.item, { garderTempo:true });
+    const it = courant.liste === 'rythme' ? rythmiquesDe(id).find(r => r.id === courant.item.id) : courant.item;
+    chargerElement(courant.liste, it, { garderTempo:true });
     if (enCours) basculerLecture();
   } else route();
 }
@@ -139,17 +164,26 @@ function ecranAccueil(){
   montrer('ecran-accueil');
   document.title = 'Mes Cordes';
   majChoixInstrument();
-  const faites = LECONS.filter(l => P.estFaite(l.id)).length;
-  const pc = Math.round(faites / LECONS.length * 100);
+  const ls = LECONS();
+  const faites = ls.filter(l => P.estFaite(l.id)).length;
+  const pc = Math.round(faites / ls.length * 100);
+  const METHODE = { guitare_elec:'médiator, power chords, riffs, rythmique rock, puis le solo',
+    guitare_classique:'pouce et doigts, mélodies, arpèges p-i-m-a, basse et mélodie ensemble',
+    basse:'doigts alternés, fondamentales avec la batterie, quinte, octave, grooves',
+    ukulele:'accords à un doigt, island strum, chuck, picking et mélodies' };
   $('#parcours-resume').textContent = faites
-    ? `${faites} leçon${faites > 1 ? 's' : ''} sur ${LECONS.length} — ${pc} %`
-    : `${LECONS.length} leçons, du premier accord au jeu en arpège, pour ${inst().nom.toLowerCase()}.`;
+    ? `${inst().nom} : ${faites} leçon${faites > 1 ? 's' : ''} sur ${ls.length} — ${pc} %`
+    : `${inst().nom} : ${ls.length} leçons — ${METHODE[reglages.instrument]}.`;
   $('#parcours-jauge').style.width = pc + '%';
   const suivante = prochaineLecon();
   $('#cta-continuer').href = lienJouer('lecon', suivante);
-  $('#cta-texte').textContent = faites ? `Leçon ${LECONS.indexOf(suivante) + 1} : ${suivante.titre}` : 'Commencer';
-  $('#compte-accords').textContent = famille() === 'basse' ? 'Fondamentales et quintes sur le manche.' : 'Schémas à toucher pour les entendre.';
-  $('#compte-rythmes').textContent = `${RYTHMIQUES.length} façons de gratter.`;
+  $('#cta-texte').textContent = faites ? `Leçon ${ls.indexOf(suivante) + 1} : ${suivante.titre}` : 'Commencer';
+  $('#titre-accords').textContent = famille() === 'basse' ? 'Arpèges' : 'Accords';
+  $('#compte-accords').textContent = famille() === 'basse' ? 'Fondamentale, tierce, quinte, octave.' : 'Schémas à toucher pour les entendre.';
+  $('#titre-rythmes').textContent = famille() === 'basse' ? 'Grooves' : reglages.instrument === 'guitare_classique' ? 'Main droite' : 'Rythmiques';
+  $('#compte-rythmes').textContent = famille() === 'basse' ? `${rythmiquesDe(reglages.instrument).length} lignes de basse avec la batterie.`
+    : reglages.instrument === 'guitare_classique' ? `${rythmiquesDe(reglages.instrument).length} arpèges et accompagnements.`
+    : `${rythmiquesDe(reglages.instrument).length} façons de gratter.`;
   $('#illus-parcours').innerHTML = ILLUS.parcours;
   $('#illus-accords').innerHTML = ILLUS.accords;
   $('#illus-rythmes').innerHTML = ILLUS.rythmes;
@@ -214,8 +248,8 @@ function itemCarte({ liste, it, num = '', meta = '', bpm = '', aFaire = false, c
 
 /* --- parcours --- */
 function ecranParcours(){
-  const html = NIVEAUX.map(nv => {
-    const ls = LECONS.filter(l => l.niveau === nv.n);
+  const html = niveauxDe(reglages.instrument).map(nv => {
+    const ls = LECONS().filter(l => l.niveau === nv.n);
     const f = ls.filter(l => P.estFaite(l.id)).length;
     return tuile({ href:'#/parcours/' + nv.n, illus:ILLUS.parcours, titre:nv.nom, coin:`Niveau ${nv.n}`,
       texte:`${ls.length} leçons — ${f} terminée${f > 1 ? 's' : ''}`, jauge:Math.round(f / ls.length * 100), grad:nv.grad });
@@ -223,11 +257,12 @@ function ecranParcours(){
   ecranListe({ sur:inst().nom, titre:'Parcours', html:`<div class="rangee tuiles">${html}</div>` });
 }
 function ecranNiveau(n){
-  const nv = NIVEAUX.find(x => x.n === n);
+  const nv = niveauxDe(reglages.instrument).find(x => x.n === n);
   if (!nv) return ecranParcours();
   const suivante = prochaineLecon();
-  const cartes = LECONS.filter(l => l.niveau === n).map(l => itemCarte({
-    liste:'lecon', it:l, num:LECONS.indexOf(l) + 1, meta:esc(l.objectif), aFaire:true, grad:nv.grad,
+  const ls = LECONS();
+  const cartes = ls.filter(l => l.niveau === n).map(l => itemCarte({
+    liste:'lecon', it:l, num:ls.indexOf(l) + 1, meta:esc(l.objectif) + (l.sections && l.sections.some(x => x.tab) ? ' · <b>tablature</b>' : ''), aFaire:true, grad:nv.grad,
     classe:(P.estFaite(l.id) ? 'faite' : '') + (l === suivante ? ' prochaine' : '')
   })).join('');
   ecranListe({ sur:'Parcours · ' + inst().nom, titre:`${n}. ${nv.nom}`, retour:'#/parcours', html:`<div class="rangee">${cartes}</div>` });
@@ -235,9 +270,10 @@ function ecranNiveau(n){
 
 /* --- rythmiques --- */
 function ecranRythmiques(){
-  const cartes = RYTHMIQUES.map((r, i) => itemCarte({ liste:'rythme', it:r, num:r.mesure, meta:esc(r.desc),
-    grad:NIV_GRAD[(r.niveau || 1) - 1], bpm:r.bpm + ' BPM' })).join('');
-  ecranListe({ sur:'Main droite · ' + inst().nom, titre:'Rythmiques', html:`<div class="rangee">${cartes}</div>` });
+  const cartes = rythmiquesDe(reglages.instrument).map(r => itemCarte({ liste:'rythme', it:r, num:r.mesure, meta:esc(r.desc),
+    grad:NIV_GRAD[Math.min(3, (r.niveau || 1) - 1)], bpm:r.bpm + ' BPM' })).join('');
+  const titre = famille() === 'basse' ? 'Grooves' : reglages.instrument === 'guitare_classique' ? 'Main droite' : 'Rythmiques';
+  ecranListe({ sur:inst().nom, titre, html:`<div class="rangee">${cartes}</div>` });
 }
 
 /* --- accords (bibliothèque) --- */
@@ -247,18 +283,19 @@ const FAMILLES_ACCORDS = [
   { id:'mineurs', nom:'Mineurs', grad:['#a78bfa', '#6d28d9'], accords:['Cm', 'C#m', 'Dm', 'Ebm', 'Em', 'Fm', 'F#m', 'Gm', 'G#m', 'Am', 'Bbm', 'Bm'] },
   { id:'septiemes', nom:'Septièmes', grad:['#fbbf24', '#e8590c'], accords:['C7', 'D7', 'E7', 'F7', 'G7', 'A7', 'B7', 'Am7', 'Dm7', 'Em7', 'Cmaj7', 'Fmaj7', 'Gmaj7'] },
   { id:'couleurs', nom:'Sus, add9, 6', grad:['#f472b6', '#be185d'], accords:['Dsus2', 'Dsus4', 'Asus2', 'Asus4', 'Esus4', 'Gsus4', 'Cadd9', 'Em7', 'C6', 'A6'] },
-  { id:'power', nom:'Power chords', grad:['#94a3b8', '#1e293b'], accords:['E5', 'F5', 'G5', 'A5', 'B5', 'C5', 'D5'], familles:['guitare'] }
+  { id:'power', nom:'Power chords', grad:['#94a3b8', '#1e293b'], accords:['E5', 'F5', 'G5', 'A5', 'B5', 'C5', 'D5'], pour:['guitare_elec'] }
 ];
 function ecranAccords(){
-  const html = FAMILLES_ACCORDS.filter(f => !f.familles || f.familles.includes(famille())).map(f => `
+  const familles = FAMILLES_ACCORDS.filter(f => !f.pour || f.pour.includes(reglages.instrument));
+  const html = familles.map(f => `
     <section class="groupe" id="acc-${f.id}">
       <div class="groupe-tete genre" style="${gradStyle(f.grad)}"><b>${f.nom}</b><span>${f.accords.length} accords</span></div>
       <div class="rangee schemas-rangee">${f.accords.map(a => {
         const svg = schemaAccord(reglages.instrument, a, { solfege:reglages.solfege, puissance:/5$/.test(a) });
         return svg ? `<button type="button" class="carte-schema" data-accord="${a}" style="${gradStyle(f.grad)}">${svg}</button>` : '';
       }).join('')}</div></section>`).join('');
-  const sauts = FAMILLES_ACCORDS.filter(f => !f.familles || f.familles.includes(famille())).map(f => ['acc-' + f.id, f.nom, f.grad[1]]);
-  ecranListe({ sur:inst().nom, titre:'Accords', html, sauts });
+  const sauts = familles.map(f => ['acc-' + f.id, f.nom, f.grad[1]]);
+  ecranListe({ sur:inst().nom + (famille() === 'basse' ? ' · touche pour entendre l\'arpège' : ''), titre:famille() === 'basse' ? 'Arpèges' : 'Accords', html, sauts });
 }
 /* toucher un schéma : on entend l'accord (ou sa fondamentale à la basse) */
 async function jouerAccord(nom, instId = reglages.instrument){
@@ -268,7 +305,7 @@ async function jouerAccord(nom, instId = reglages.instrument){
   etoufferTout();
   if (i.famille === 'basse'){
     const b = notesBasse(nom);
-    if (b){ note('basse', b.R, t, { velo:0.95 }); note('basse', b[5], t + 0.35, { velo:0.8 }); note('basse', b[8], t + 0.7, { velo:0.8 }); }
+    if (b) ['R', 3, 5, 8].forEach((k, i) => note('basse', b[k], t + i * 0.32, { velo:i ? 0.8 : 0.95, duree:0.3 }));
     return;
   }
   const f = forme(instId, nom, { puissance:/5$/.test(nom) });
@@ -278,7 +315,7 @@ document.addEventListener('click', e => {
   const b = e.target.closest('[data-accord]');
   if (b) jouerAccord(b.dataset.accord);
   const c = e.target.closest('.corde-btn');
-  if (c){ reprendreAudio().then(() => jouerReference(+c.dataset.midi, 2.4)); }
+  if (c){ reprendreAudio().then(() => jouerReference(+c.dataset.midi, inst().timbre)); }
 });
 
 /* --- progression --- */
@@ -287,14 +324,14 @@ function ecranProgression(){
   const max = Math.max(10, ...histo.map(h => h.minutes));
   const nomDe = (liste, id) => { const it = (SOURCES[liste] ? SOURCES[liste]() : []).find(x => x.id === id); return it ? it.titre : null; };
   const lignes = s => P.elementsDe(s).map(e => ({ ...e, nom:nomDe(e.liste, e.id) })).filter(e => e.nom)
-    .map(e => `<li><a href="#/jouer/${e.liste}/${encodeURIComponent(e.id)}"><span class="ls-cat">${LISTES[e.liste].nom}</span> <span class="ls-nom">${esc(e.nom)}</span></a></li>`).join('')
+    .map(e => `<li><a href="#/jouer/${e.liste}/${encodeURIComponent(e.id)}"><span class="ls-cat">${e.liste === 'lecon' ? INSTRUMENTS[instrumentDe(TOUTES_LECONS.find(l => l.id === e.id))].court : LISTES[e.liste].nom}</span> <span class="ls-nom">${esc(e.nom)}</span></a></li>`).join('')
     || '<li class="muted small">Rien pour l\'instant.</li>';
-  const faites = LECONS.filter(l => P.estFaite(l.id)).length;
+  const faites = LECONS().filter(l => P.estFaite(l.id)).length;
   const html = `
     <div class="bloc bloc-stats"><h3>Bilan</h3><div class="stats">
       <div class="stat"><span class="stat-n">${P.minutesAujourdhui()}</span><span>min aujourd'hui</span></div>
       <div class="stat"><span class="stat-n">${P.serie()}</span><span>jours d'affilée</span></div>
-      <div class="stat"><span class="stat-n">${faites}/${LECONS.length}</span><span>leçons</span></div>
+      <div class="stat"><span class="stat-n">${faites}/${LECONS().length}</span><span>leçons (${inst().court.toLowerCase()})</span></div>
       <div class="stat"><span class="stat-n">${P.minutesTotal()}</span><span>min au total</span></div></div></div>
     <div class="bloc bloc-histo"><h3>Trois semaines</h3><div class="barres">${histo.map(h =>
       `<i style="height:${Math.max(2, h.minutes / max * 100)}%" title="${h.jour} : ${h.minutes} min"></i>`).join('')}</div></div>
@@ -311,15 +348,21 @@ function ecranProgression(){
 function ouvrir(liste, id){
   const src = SOURCES[liste];
   if (!src) return false;
-  const item = src().find(x => x.id === id);
+  let item = src().find(x => x.id === id);
   if (!item) return false;
+  if (liste === 'lecon'){
+    // une leçon appartient à la méthode d'un instrument : on passe sur cet instrument
+    const i = instrumentDe(item);
+    if (i && i !== reglages.instrument){ reglages.instrument = i; sauverReglages(); majChoixInstrument(); }
+  } else if (liste === 'rythme'){
+    item = rythmiquesDe(reglages.instrument).find(x => x.id === id) || item;
+  }
   montrer('ecran-jouer');
   chargerElement(liste, item);
   return true;
 }
 
 function sectionsDe(liste, item){
-  if (liste === 'lecon') return sectionsPour(item, famille());
   if (liste === 'atelier') return sectionsAtelier();
   return item.sections;
 }
@@ -329,12 +372,12 @@ function chargerElement(liste, item, { garderTempo = false } = {}){
   const def = LISTES[liste];
   const lecon = liste === 'lecon';
   courant = { liste, item };
-  $('#j-sur').textContent = lecon ? `Leçon ${LECONS.indexOf(item) + 1} · ${inst().court}` : def.nom + ' · ' + inst().court;
+  const items = def.items(item);
+  const i = items.indexOf(item);
+  $('#j-sur').textContent = lecon ? `Leçon ${i + 1} · ${inst().court}` : def.nom + ' · ' + inst().court;
   $('#j-titre').textContent = item.titre;
   $('#j-retour').href = def.retour(item);
   document.title = item.titre + ' — Mes Cordes';
-  const items = def.items(item);
-  const i = items.indexOf(item);
   navLien('#j-prec', i > 0 ? lienJouer(liste, items[i - 1]) : null);
   navLien('#j-suiv', i >= 0 && i < items.length - 1 ? lienJouer(liste, items[i + 1]) : null);
   if (lecon) P.setDerniereLecon(item.id);
@@ -356,23 +399,31 @@ function chargerElement(liste, item, { garderTempo = false } = {}){
     return;
   }
 
-  const o = lecteur.options;
+  const sections = sectionsDe(liste, item);
   const mesureId = item.mesure || '4/4';
+  courant.compile = compilerSections(sections, mesureId);
+  const tab = courant.compile.avecTab;
+  const o = lecteur.options;
   o.instrument = reglages.instrument;
   o.style = item.style || 'folk';
   o.mode = item.mode || 'grat';
   o.puissance = !!item.puissance && famille() === 'guitare';
-  if (!garderTempo){ o.transpo = 0; o.capo = famille() === 'guitare' ? (item.capo || 0) : 0; }
-  // la basse : si c'est ton instrument, c'est toi qui la joues
-  o.basse = famille() !== 'basse';
-  o.accords = true;
-  majBascule($('#opt-basse'), o.basse);
-  majBascule($('#opt-accords'), o.accords);
+  if (!garderTempo || tab){ o.transpo = 0; o.capo = famille() === 'guitare' && !tab ? (item.capo || 0) : 0; }
+  // ce que l'appli fait entendre au départ : la leçon le dit, sinon selon l'instrument
+  const c = item.couches || {};
+  const basse = famille() === 'basse';
+  o.accords = c.accords ?? !tab;
+  o.basse = c.basse ?? liste === 'atelier';
+  o.batterie = c.batterie ?? (liste === 'atelier' && (basse || reglages.instrument === 'guitare_elec'));
+  o.melodie = true;
+  o.clic = reglages.clic || !!c.clic;
+  setSaturation(item.son === 'clair' ? false : reglages.sat);
+  for (const [id, v] of [['#opt-accords', o.accords], ['#opt-basse', o.basse], ['#opt-batterie', o.batterie], ['#opt-exo', o.melodie], ['#opt-click', o.clic]]) majBascule($(id), v);
+  $('#opt-exo').hidden = !tab;
   setCouche('accords', reglages.volAccords);
   setCouche('basse', reglages.volBasse);
+  setCouche('batterie', reglages.volBatterie ?? 1);
 
-  const sections = sectionsDe(liste, item);
-  courant.compile = compilerSections(sections, mesureId);
   lecteur.charger(courant.compile.mesures, mesureId);
   lecteur.invalider();
   if (!garderTempo) lecteur.setTempo(item.bpm || 80);
@@ -391,40 +442,71 @@ function quitterLecteur(){
   if (lecteur.enLecture) lecteur.arreter();
   courant = null;
   arreterReference();
+  setSaturation(reglages.sat);
 }
 
-/* --- la grille à l'écran : sections, mesures, accords --- */
-function nomAffiche(nom){ return afficherAccord(lecteur.nomJoue(nom), reglages.solfege); }
+/* --- la grille à l'écran : sections, mesures, accords (ou tablature) --- */
+function nomAffiche(nom){ return nom === 'N.C.' ? '' : afficherAccord(lecteur.nomJoue(nom), reglages.solfege); }
 function rendreGrille(){
-  const { mesures, sections } = courant.compile;
+  const { mesures, sections, avecTab } = courant.compile;
   const res = MESURES[lecteur.mesureId];
-  let html = barreMainDroite();
+  const pas = lecteur.pas;
+  const nbCordes = inst().cordes.length;
+  let html = avecTab ? '' : barreMainDroite();
+  accordBarre = null; pasAllume = null; tabAllumees = []; mancheAffiche = null;
   sections.forEach((s, si) => {
-    html += `<div class="g-section" data-section="${si}"><h3 class="g-titre">${esc(s.nom)}${s.rep > 1 ? ` <em>×${s.rep}</em>` : ''}</h3><div class="g-mesures">`;
+    html += `<div class="g-section" data-section="${si}"><h3 class="g-titre">${esc(s.nom)}${s.rep > 1 ? ` <em>×${s.rep}</em>` : ''}</h3><div class="g-mesures${avecTab ? ' tabs' : ''}">`;
     for (let k = s.debut; k < s.fin; k++){
       const m = mesures[k];
-      html += `<div class="g-mesure${m.accords.length > 1 ? ' double' : ''}" data-m="${k}">
-        <div class="g-accords">${m.accords.map(a => `<b>${esc(nomAffiche(a.nom))}</b>`).join('')}</div>
-        <div class="g-temps">${Array.from({ length:res.beats }, () => '<i></i>').join('')}</div>
-        <span class="g-prog"></span></div>`;
+      const accords = `<div class="g-accords">${m.accords.map(a => `<b>${esc(nomAffiche(a.nom))}</b>`).join('')}</div>`;
+      if (m.tab){
+        // tablature : une ligne par corde (corde 1 en haut), un pas par colonne
+        let cases = '';
+        for (let p = 0; p < pas; p++){
+          const notes = m.tab[p];
+          for (let c = 1; c <= nbCordes; c++){
+            const n = notes.find(x => x.corde === c);
+            if (n) cases += `<span class="t-n" data-p="${p}" style="grid-column:${p + 1};grid-row:${c}">${n.case}${n.mod ? `<sup>${n.mod}</sup>` : ''}</span>`;
+          }
+        }
+        const temps = Array.from({ length:res.beats }, (_, b) => `<i style="grid-column:${b * res.res + 1} / span ${res.res}"></i>`).join('');
+        html += `<div class="g-mesure tab" data-m="${k}" style="--pas:${pas};--cordes:${nbCordes}">${accords}
+          <div class="t-grille">${Array.from({ length:nbCordes }, (_, c) => `<span class="t-corde" style="grid-row:${c + 1}"></span>`).join('')}${cases}<span class="t-curseur"></span></div>
+          <div class="g-temps t-temps">${temps}</div><span class="g-prog"></span></div>`;
+      } else {
+        html += `<div class="g-mesure${m.accords.length > 1 ? ' double' : ''}" data-m="${k}">${accords}
+          <div class="g-temps">${Array.from({ length:res.beats }, () => '<i></i>').join('')}</div>
+          <span class="g-prog"></span></div>`;
+      }
     }
     html += '</div></div>';
   });
   $('#grille-accords').innerHTML = html;
+  $('#grille-accords').classList.toggle('en-tab', !!avecTab);
   $('#grille-accords').scrollTop = 0;
   mesureActive = -1;
 }
 $('#grille-accords').addEventListener('click', e => {
   const c = e.target.closest('.g-mesure');
-  if (!c || !courant || !courant.compile) return;
+  if (!c || !courant || !courant.compile || lecteur.enLecture) return;
   const m = +c.dataset.m;
-  const s = courant.compile.sections.findIndex(x => m >= x.debut && m < x.fin);
-  if (lecteur.enLecture) return;
+  const me = courant.compile.mesures[m];
   majDiagrammes(m, 0);
-  const a = courant.compile.mesures[m].accords[0];
-  jouerAccord(lecteur.nomJoue(a.nom), famille() === 'basse' ? 'basse' : reglages.instrument);
-  if (s >= 0) activerMesure(m, false);
+  activerMesure(m, false);
+  if (me.tab) jouerMesureTab(me);
+  else jouerAccord(lecteur.nomJoue(me.accords[0].nom), reglages.instrument);
 });
+/* toucher une mesure de tablature : on l'entend, au tempo */
+async function jouerMesureTab(me){
+  await reprendreAudio();
+  const t0 = ctxAudio().currentTime + 0.05;
+  const i = inst();
+  etoufferTout();
+  me.tab.forEach((notes, p) => notes.forEach(n => {
+    const midi = i.cordes[i.cordes.length - n.corde] + n.case;
+    note(i.timbre, midi, t0 + p * lecteur.dureePas, { couche:'libre', etouffe:n.mod === 'x', bend:n.mod === 'b' ? 2 : 0, velo:0.85 });
+  }));
+}
 
 function activerMesure(m, defiler = true){
   const zone = $('#grille-accords');
@@ -447,7 +529,7 @@ function majProgression(pos, c){
   if (el) el.style.setProperty('--prog', ((pos % lecteur.pas) / lecteur.pas * 100).toFixed(1) + '%');
 }
 
-/* --- diagrammes : accord en cours et suivant --- */
+/* --- diagrammes : accord en cours et suivant, ou le manche de l'exercice --- */
 function accordA(m, p){
   const me = courant.compile.mesures[m];
   if (!me) return null;
@@ -467,8 +549,38 @@ function suivantApres(m, p){
   }
   return null;
 }
+/* toutes les positions de la tablature d'une section (pour dessiner le manche) */
+function positionsSection(m){
+  const secs = courant.compile.sections;
+  const s = secs.find(x => m >= x.debut && m < x.fin) || secs[0];
+  const vues = new Map();
+  for (let k = s.debut; k < s.fin; k++){
+    const me = courant.compile.mesures[k];
+    if (me.tab) for (const notes of me.tab) for (const n of notes) vues.set(n.corde + '.' + n.case, n);
+  }
+  return { cle:s.debut, positions:[...vues.values()] };
+}
+let mancheAffiche = null;
 function majDiagrammes(m, p){
   if (!courant || !courant.compile) return;
+  const me = courant.compile.mesures[m];
+  if (me && me.tab){
+    // exercice en tablature : le manche avec toutes les notes de la section, la note jouée s'allume
+    const { cle, positions } = positionsSection(m);
+    if (mancheAffiche !== cle){
+      mancheAffiche = cle;
+      $('#diag-actuel').innerHTML = schemaPositions(reglages.instrument, positions, { solfege:reglages.solfege });
+    }
+    const nom = accordA(m, p);
+    accordAffiche = nom;
+    $('#diag-suivant').parentElement.hidden = famille() === 'basse' || nom === 'N.C.';
+    if (nom !== 'N.C.') $('#diag-suivant').innerHTML = schemaAccord(reglages.instrument, nom, { puissance:lecteur.options.puissance, solfege:reglages.solfege, titre:true }) || '';
+    $('.diag-suivant .surtitre').textContent = 'Accord';
+    return;
+  }
+  mancheAffiche = null;
+  $('#diag-suivant').parentElement.hidden = false;
+  $('.diag-suivant .surtitre').textContent = 'Ensuite';
   const nom = accordA(m, p);
   accordAffiche = nom;
   if (!nom) return;
@@ -477,6 +589,20 @@ function majDiagrammes(m, p){
   const joue = lecteur.nomJoue(nom);
   $('#diag-actuel').innerHTML = schemaAccord(reglages.instrument, joue, { puissance:pw, solfege:reglages.solfege }) || `<p class="sc-inconnu">${esc(joue)}</p>`;
   $('#diag-suivant').innerHTML = suivant ? (schemaAccord(reglages.instrument, lecteur.nomJoue(suivant), { puissance:pw, solfege:reglages.solfege }) || '') : '';
+}
+/* pendant la lecture d'une tablature : la note jouée s'allume dans la tablature et sur le manche */
+let tabAllumees = [];
+function allumerTab(c){
+  const me = courant && courant.compile && courant.compile.mesures[c.mesure];
+  if (!me || !me.tab) return;
+  const notes = me.tab[c.p];
+  if (!notes || !notes.length) return;
+  tabAllumees.forEach(e => e.classList.remove('on'));
+  const bloc = $('#grille-accords').querySelector(`[data-m="${c.mesure}"]`);
+  tabAllumees = bloc ? [...bloc.querySelectorAll(`.t-n[data-p="${c.p}"]`)] : [];
+  if (mancheAffiche !== positionsSection(c.mesure).cle) majDiagrammes(c.mesure, c.p);
+  for (const n of notes){ const d = $('#diag-actuel').querySelector(`[data-pos="${n.corde}.${n.case}"]`); if (d) tabAllumees.push(d); }
+  tabAllumees.forEach(e => e.classList.add('on'));
 }
 
 /* --- sections (boucler une partie) --- */
@@ -511,37 +637,50 @@ function remplirAide(){
   let h = '';
   if (l === 'lecon'){
     h = `<h2>${esc(it.titre)}</h2><p class="objectif"><b>Objectif :</b> ${esc(it.objectif)}</p>${it.texte}${(it.conseils || []).map(CONSEIL).join('')}`;
-    if (famille() === 'basse' && it.type !== 'cordes') h += CONSEIL('À la basse : joue la fondamentale de chaque accord (le rond « F » sur le schéma), sur le premier temps, puis suis la ligne de basse de la rythmique. L\'appli joue les accords pour toi.');
+    if (courant.compile && courant.compile.avecTab) h += `<h3>Lire la tablature</h3><p class="small">Chaque ligne est une corde (la plus aiguë en haut), le chiffre est la case à jouer (0 = corde à vide). Touche une mesure pour l'entendre. Le manche à droite montre où poser les doigts, et la note jouée s'allume.</p>
+      <p class="small">Bouton <b>note</b> (en bas) : entendre l'exercice ou le couper pour le jouer seul.</p>`;
   } else if (l === 'rythme'){
-    h = `<h2>${esc(it.titre)}</h2><p>${esc(it.desc)}</p>${lectureRythme(it.style, it.mesure)}`;
+    h = `<h2>${esc(it.titre)}</h2><p>${esc(it.desc)}</p>` + (famille() === 'basse'
+      ? `<h3>Ligne de basse</h3><p class="small">En haut de la grille : F = fondamentale, 3 = tierce, 5 = quinte, 6 = sixte, 7 = septième, 8 = octave, avec le nom de la note pour l'accord en cours. Écoute avec le bouton basse, puis coupe-le et joue.</p>`
+      : lectureRythme(it.style, it.mesure));
   } else {
     h = `<h2>Atelier</h2><p>Écris ta propre grille (icône texte) : les accords et la mesure. Choisis ensuite la rythmique et le tempo dans les réglages, et joue par-dessus.</p>`;
   }
   $('#aide-corps').innerHTML = h;
-  const accords = courant.compile ? [...new Set(courant.compile.mesures.flatMap(m => m.accords.map(a => a.nom)))] : [];
+  const accords = courant.compile ? [...new Set(courant.compile.mesures.flatMap(m => m.accords.map(a => a.nom)))].filter(a => a !== 'N.C.') : [];
   $('#aide-accords').innerHTML = accords.map(a => {
     const joue = lecteur.nomJoue(a);
     const svg = schemaAccord(reglages.instrument, joue, { puissance:lecteur.options.puissance, solfege:reglages.solfege });
     return svg ? `<button type="button" class="carte-schema" data-accord="${esc(joue)}">${svg}</button>` : '';
   }).join('');
 }
-/* barre « main droite » en haut de la grille : le motif de la mesure, qui s'allume en direct */
-const SIG_GRAT = { D:'↓', U:'↑', d:'↓', x:'✕', B:'B', b:'b', '0':'B', '-':'·' };
-const SIG_ARP = { '0':'p', c:'i', b:'m', a:'a', '-':'·' };
+/* barre « main droite » en haut de la grille : le motif de la mesure, qui s'allume en direct.
+ * À la basse, c'est la ligne de basse du style, avec le nom des notes de l'accord en cours. */
+const SIG_GRAT = { D:'↓', U:'↑', d:'↓', x:'✕', P:'↓', k:'↓', B:'B', b:'b', '0':'B', '1':'b', '-':'·' };
+const SIG_ARP = { '0':'p', '1':'p', c:'i', b:'m', a:'a', '-':'·' };
+const EM_GRAT = { P:'PM', x:'étouffé', k:'bref' };
 function barreMainDroite(){
   const o = lecteur.options, mesure = lecteur.mesureId;
   const s = STYLES[o.style], p = s && (s[mesure] || null);
   if (!p) return '';
   const res = MESURES[mesure].res;
-  const motif = o.mode === 'arp' ? p.arp : p.grat;
-  const sig = o.mode === 'arp' ? SIG_ARP : SIG_GRAT;
-  const nom = o.mode === 'arp' ? 'Arpège' : 'Grattage';
-  return `<div class="main-droite" id="main-droite" title="${nom} : ${esc(s.nom)}"><span class="md-lbl">${nom}<em>${esc(s.nom)}</em></span>${[...motif].map((c, i) =>
-    `<span class="rv-case${i % res === 0 ? ' temps' : ''}${c === '-' ? ' vide' : ''}"><b>${sig[c] || c}</b><em>${i % res === 0 ? i / res + 1 : res === 2 ? 'et' : ''}</em></span>`).join('')}</div>`;
+  const basse = famille() === 'basse';
+  const motif = basse ? p.basse : o.mode === 'arp' ? p.arp : p.grat;
+  const nom = basse ? 'Ligne de basse' : o.mode === 'arp' ? 'Arpège' : 'Grattage';
+  const signe = c => basse ? (c === '-' ? '·' : c === 'R' ? 'F' : c) : ((o.mode === 'arp' ? SIG_ARP : SIG_GRAT)[c] || c);
+  const sous = (c, i) => !basse && o.mode !== 'arp' && EM_GRAT[c] ? EM_GRAT[c] : i % res === 0 ? i / res + 1 : res === 2 ? 'et' : '';
+  return `<div class="main-droite${basse ? ' basse' : ''}" id="main-droite"><span class="md-lbl">${nom}<em>${esc(s.nom)}</em></span>${[...motif].map((c, i) =>
+    `<span class="rv-case${i % res === 0 ? ' temps' : ''}${c === '-' ? ' vide' : ''}" data-s="${c}"><b>${signe(c)}</b><em>${sous(c, i)}</em><small></small></span>`).join('')}</div>`;
 }
-let pasAllume = null;
-function allumerPas(p){
+let pasAllume = null, accordBarre = null;   // remis à zéro à chaque nouvelle grille
+function allumerPas(p, accord){
   const cases = document.querySelectorAll('#main-droite .rv-case');
+  // basse : sous chaque signe, le nom de la note pour l'accord en cours
+  if (famille() === 'basse' && accord && accord !== accordBarre){
+    accordBarre = accord;
+    const b = notesBasse(lecteur.nomJoue(accord));
+    cases.forEach(c => { const k = c.dataset.s; c.querySelector('small').textContent = b && b[k] != null ? nomClasse(b[k], reglages.solfege) : ''; });
+  }
   if (pasAllume) pasAllume.classList.remove('on');
   pasAllume = cases[p] || null;
   if (pasAllume) pasAllume.classList.add('on');
@@ -551,7 +690,7 @@ function lectureRythme(styleId, mesure){
   const s = STYLES[styleId], p = s && s[mesure];
   if (!p) return '';
   const res = MESURES[mesure].res;
-  const SIG = { D:'↓', U:'↑', d:'↓', x:'✕', B:'B', b:'b', '-':'·' };
+  const SIG = { D:'↓', U:'↑', d:'↓', x:'✕', P:'↓', k:'↓', B:'B', b:'b', '0':'B', '1':'b', '-':'·' };
   const cases = [...p.grat].map((c, i) => `<span class="rv-case${i % res === 0 ? ' temps' : ''}"><b>${SIG[c] || c}</b><em>${i % res === 0 ? i / res + 1 : res === 2 ? 'et' : ''}</em></span>`).join('');
   return `<h3>Main droite</h3><div class="rythme-vis">${cases}</div>
     <p class="small muted">↓ vers le bas · ↑ vers le haut · ✕ corde étouffée · B basse seule · · on ne touche pas les cordes (la main continue son mouvement).</p>`;
@@ -560,7 +699,8 @@ function lectureRythme(styleId, mesure){
 /* ================= réglages du lecteur ================= */
 function majReglagesLecteur(){
   const o = lecteur.options;
-  const styles = stylesPour(lecteur.mesureId);
+  const styles = stylesPour(lecteur.mesureId, reglages.instrument);
+  if (!styles.includes(o.style) && STYLES[o.style]) styles.unshift(o.style);
   $('#opt-style').innerHTML = styles.map(id => `<option value="${id}"${id === o.style ? ' selected' : ''}>${STYLES[id].nom}</option>`).join('')
     || `<option>${STYLES[o.style] ? STYLES[o.style].nom : o.style}</option>`;
   $('#style-desc').textContent = STYLES[o.style] ? STYLES[o.style].desc : '';
@@ -575,6 +715,9 @@ function majReglagesLecteur(){
   $('#opt-solfege').checked = reglages.solfege;
   $('#vol-accords').value = reglages.volAccords;
   $('#vol-basse').value = reglages.volBasse;
+  $('#vol-batterie').value = reglages.volBatterie ?? 1;
+  const tab = courant && courant.compile && courant.compile.avecTab;
+  $('#bloc-tonalite').hidden = !!tab;
   majChoixInstrument();
 }
 function apresChangement(){
@@ -595,11 +738,18 @@ $('#opt-loop').addEventListener('change', e => { reglages.boucle = lecteur.optio
 $('#opt-solfege').addEventListener('change', e => { reglages.solfege = e.target.checked; sauverReglages(); apresChangement(); });
 $('#vol-accords').addEventListener('input', e => { reglages.volAccords = +e.target.value; setCouche('accords', reglages.volAccords); sauverReglages(); });
 $('#vol-basse').addEventListener('input', e => { reglages.volBasse = +e.target.value; setCouche('basse', reglages.volBasse); sauverReglages(); });
+$('#vol-batterie').addEventListener('input', e => { reglages.volBatterie = +e.target.value; setCouche('batterie', reglages.volBatterie); sauverReglages(); });
 
 /* ================= transport ================= */
 function majBascule(el, on){ el.classList.toggle('actif', on); el.setAttribute('aria-pressed', on); }
 majBascule($('#opt-click'), reglages.clic);
-$('#opt-click').addEventListener('click', () => { reglages.clic = lecteur.options.clic = !reglages.clic; majBascule($('#opt-click'), reglages.clic); sauverReglages(); });
+$('#opt-click').addEventListener('click', () => { reglages.clic = lecteur.options.clic = !lecteur.options.clic; majBascule($('#opt-click'), reglages.clic); sauverReglages(); });
+$('#opt-batterie').addEventListener('click', () => { lecteur.options.batterie = !lecteur.options.batterie; majBascule($('#opt-batterie'), lecteur.options.batterie); });
+$('#opt-exo').addEventListener('click', () => {
+  lecteur.options.melodie = !lecteur.options.melodie;
+  majBascule($('#opt-exo'), lecteur.options.melodie);
+  if (!lecteur.options.melodie) annoncer('À toi de jouer l\'exercice');
+});
 $('#opt-accords').addEventListener('click', () => { lecteur.options.accords = !lecteur.options.accords; majBascule($('#opt-accords'), lecteur.options.accords); if (!lecteur.options.accords) etoufferTout(); });
 $('#opt-basse').addEventListener('click', () => { lecteur.options.basse = !lecteur.options.basse; majBascule($('#opt-basse'), lecteur.options.basse); });
 $('#bpm').addEventListener('input', e => lecteur.setTempo(+e.target.value));

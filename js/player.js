@@ -1,7 +1,10 @@
 /* Lecteur d'accompagnement : planification audio précise (lookahead) + suivi visuel.
- * Il joue une suite de mesures (chaque mesure = un ou deux accords) avec une rythmique
- * de grattage ou d'arpège pour l'instrument choisi, et une ligne de basse si on le demande. */
-import { reprendreAudio, ctxAudio, clic, gratter, note, etouffer, etoufferTout } from './audio.js';
+ * Il joue une suite de mesures (chaque mesure = un ou deux accords) en quatre couches :
+ *  - accords : grattage ou arpège de la rythmique choisie ;
+ *  - basse : la ligne de basse de la rythmique ;
+ *  - batterie : le rythme de batterie de la rythmique ;
+ *  - exercice : la tablature de la leçon, jouée par ton instrument (pour l'entendre avant). */
+import { reprendreAudio, ctxAudio, clic, gratter, note, etouffer, etoufferTout, frapper } from './audio.js';
 import { MESURES, pasParMesure, patronsPour, accordAuPas } from './rythmes.js';
 import { forme, notesDe } from './accords.js';
 import { analyserAccord, transposer, mod12 } from './theorie.js';
@@ -17,7 +20,7 @@ export function notesBasse(nom, capo = 0){
   const r = mod12((a.basse != null ? a.basse : a.racine) + capo);
   let base = 28 + mod12(r - 28);
   const tierce = a.type.tierce || 4;
-  return { R:base, 3:base + tierce, 5:base + 7, 6:base + 9, 8:base + 12 };
+  return { R:base, 3:base + tierce, 5:base + 7, 6:base + 9, 7:base + (a.intervalles.includes(11) ? 11 : 10), 8:base + 12 };
 }
 
 export class Lecteur {
@@ -30,6 +33,7 @@ export class Lecteur {
     this.options = {
       boucle:true, decompte:true, clic:false,
       accords:true, basse:false,          // couches jouées par l'appli
+      batterie:false, melodie:true,
       instrument:'guitare_elec',          // instrument qui joue les accords
       style:'folk', mode:'grat',          // 'grat' (grattage) ou 'arp' (arpège)
       capo:0, transpo:0, puissance:false, // capodastre, transposition, power chords
@@ -75,8 +79,9 @@ export class Lecteur {
     if (v) return v;
     const jouee = this.nomJoue(nom);
     const inst = INSTRUMENTS[o.instrument];
-    // un accordeur de basse ne « gratte » pas : pour la basse, les accords sont joués à la guitare acoustique
-    const famille = inst.famille === 'basse' ? INSTRUMENTS.guitare_classique : inst;
+    // la basse ne gratte pas d'accords : quand tu joues de la basse, une guitare électrique
+    // en son clair joue les accords pour toi
+    const famille = inst.famille === 'basse' ? { ...INSTRUMENTS.guitare_elec, timbre:'clair' } : inst;
     const f = forme(famille.id, jouee, { puissance:o.puissance && famille.famille === 'guitare' });
     const notes = f ? notesDe(famille.id, f, o.capo) : [];
     v = { notes, basse:notesBasse(jouee, o.capo), nom:jouee, famille };
@@ -94,6 +99,7 @@ export class Lecteur {
     this.step = this.debutPlage;
     this.file = [];
     this._dernier = null;
+    this._cordes = {};
     this.compteRestant = this.options.decompte ? MESURES[this.mesureId].beats : 0;
     this.prochain = ctx.currentTime + 0.12;
     this.debutBoucle = this.prochain + this.compteRestant * this.dureeTemps;
@@ -167,34 +173,61 @@ export class Lecteur {
     if (o.accords && v.notes.length){
       const inst = v.famille;
       const signe = (o.mode === 'arp' ? pat.arp : pat.grat)[p] || '-';
-      const tri = [...v.notes];          // dans l'ordre des cordes : on trie par hauteur
-      tri.sort((a, b) => a - b);
-      if (o.mode === 'arp'){
-        let idx = -1;
-        if (signe === '0') idx = 0;
-        else if ('abc'.includes(signe)) idx = tri.length - 1 - 'abc'.indexOf(signe);
-        else if (/\d/.test(signe)) idx = Math.min(+signe, tri.length - 1);
-        if (idx >= 0) note(inst.timbre, tri[Math.max(0, Math.min(tri.length - 1, idx))], t, { couche:'accords', velo:signe === '0' ? 0.9 : 0.68 });
+      const tri = [...v.notes].sort((a, b) => a - b);
+      const indice = sg => sg === '0' ? 0 : 'abc'.includes(sg) ? tri.length - 1 - 'abc'.indexOf(sg) : /\d/.test(sg) ? Math.min(+sg, tri.length - 1) : -1;
+      if (o.mode === 'arp' || /[0-9abc]/.test(signe)){
+        const idx = indice(signe);
+        if (idx >= 0) note(inst.timbre, tri[Math.max(0, Math.min(tri.length - 1, idx))], t, { couche:'accords', velo:signe === '0' ? 0.9 : 0.7 });
       } else if (signe !== '-'){
-        if (signe === 'D') { etouffer('accords', t); gratter(inst, v.notes, t, { sens:'D', velo:p === 0 ? 0.95 : 0.78 }); }
-        else if (signe === 'U') gratter(inst, v.notes, t, { sens:'U', velo:0.6 });
-        else if (signe === 'd') { etouffer('accords', t); gratter(inst, v.notes, t, { sens:'d', velo:0.62 }); }
-        else if (signe === 'x') gratter(inst, v.notes, t, { sens:'D', velo:0.7, etouffe:true, vitesse:0.004 });
-        else if (signe === 'B' || signe === 'b'){
-          etouffer('accords', t);
-          const grave = signe === 'B' ? tri[0] : (tri[1] !== undefined ? tri[1] : tri[0]);
-          note(inst.timbre, grave, t, { couche:'accords', velo:0.85 });
+        const fort = p === 0 ? 0.95 : 0.8;
+        switch (signe){
+          case 'D': etouffer('accords', t); gratter(inst, v.notes, t, { sens:'D', velo:fort }); break;
+          case 'U': gratter(inst, v.notes, t, { sens:'U', velo:0.62 }); break;
+          case 'd': etouffer('accords', t); gratter(inst, v.notes, t, { sens:'d', velo:0.62 }); break;
+          case 'P': etouffer('accords', t, 0.015); gratter(inst, v.notes, t, { sens:'D', velo:0.85, pm:true, vitesse:0.006 }); break;
+          case 'x': etouffer('accords', t, 0.01); gratter(inst, v.notes, t, { sens:'D', velo:0.75, etouffe:true, vitesse:0.004 }); break;
+          case 'k': etouffer('accords', t); gratter(inst, v.notes.slice(-4), t, { sens:'D', velo:0.8, vitesse:0.006 }); etouffer('accords', t + 0.13, 0.04); break;
+          case 'B': case 'b': {
+            etouffer('accords', t);
+            const grave = signe === 'B' ? tri[0] : (tri[1] !== undefined ? tri[1] : tri[0]);
+            note(inst.timbre, grave, t, { couche:'accords', velo:0.85 });
+            break;
+          }
         }
-        else if (signe === '0') note(inst.timbre, tri[0], t, { couche:'accords', velo:0.85 });
       }
     }
 
     if (o.basse && v.basse){
       const b = pat.basse[p] || '-';
-      const m = v.basse[b];
-      if (m != null && b !== '-'){
+      const mb = v.basse[b];
+      if (mb != null && b !== '-'){
         etouffer('basse', t, 0.015);
-        note('basse', m, t, { couche:'basse', velo:b === 'R' && p === 0 ? 0.95 : 0.8 });
+        note('basse', mb, t, { couche:'basse', velo:b === 'R' && p === 0 ? 0.95 : 0.82 });
+      }
+    }
+
+    if (o.batterie && pat.batt){
+      for (const el of ['GC', 'CC', 'CH']){
+        const c = pat.batt[el][p];
+        if (!c || c === '-') continue;
+        if (c === 'o') frapper('CHO', t, 0.85);
+        else frapper(el, t, c === 'X' ? 1 : c === 'g' ? 0.3 : el === 'CH' && p % this.res ? 0.6 : 0.85);
+      }
+    }
+
+    // l'exercice : les notes de la tablature, jouées par ton instrument
+    if (o.melodie && mesure.tab && mesure.tab[p] && mesure.tab[p].length){
+      const inst = INSTRUMENTS[o.instrument];
+      for (const n of mesure.tab[p]){
+        const i = inst.cordes.length - n.corde;            // corde 1 = la plus aiguë
+        if (i < 0 || i >= inst.cordes.length) continue;
+        const midi = inst.cordes[i] + n.case + (inst.famille === 'basse' ? 0 : o.capo);
+        const prec = this._cordes[n.corde];                 // une corde ne joue qu'une note à la fois
+        if (prec) try { prec.gain.gain.setTargetAtTime(0, t, 0.015); prec.src.stop(t + 0.1); } catch { /* finie */ }
+        this._cordes[n.corde] = note(inst.timbre, midi, t, {
+          couche:'melodie', etouffe:n.mod === 'x', bend:n.mod === 'b' ? 2 : 0,
+          velo:n.mod === 'h' || n.mod === 'p' ? 0.55 : 0.9
+        });
       }
     }
   }

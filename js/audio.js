@@ -1,12 +1,12 @@
-/* Moteur audio : cordes pincées synthétisées (algorithme de Karplus-Strong), aucun fichier son.
- * Chaque note est calculée une fois (un petit tableau d'échantillons), puis rejouée à volonté.
- * Chaque instrument a son caractère :
- *  - classique : nylon doux, sourd, corps de caisse qui résonne autour de 200 Hz ;
- *  - électrique : cordes d'acier, son clair ou saturé (ampli + haut-parleur simulés) ;
- *  - basse : grave, rond, très peu d'aigus ;
- *  - ukulélé : nylon aigu, court et vif.
- * Ces calculs ne touchent pas au navigateur : rendreCorde() se teste sous Node. */
+/* Moteur audio.
+ * Les notes sont de vrais enregistrements (banque FluidR3, CC BY 3.0) intégrés à l'appli :
+ * guitare nylon (classique, et ukulélé en plus court et plus clair), guitare électrique
+ * claire ou saturée, basse aux doigts. La batterie d'accompagnement vient de Ma Batterie
+ * (Virtuosity Drums, CC0). Tant que les enregistrements ne sont pas décodés (une fraction
+ * de seconde au premier toucher), une corde de synthèse (Karplus-Strong) prend le relais.
+ * rendreCorde() ne touche pas au navigateur : elle se teste sous Node. */
 import { midiEnFreq } from './theorie.js';
+import { SONS_CORDES, SONS_BATTERIE } from './sons.js';
 
 /* paramètres par timbre : d = amortissement des aigus (0 = corde très brillante, 0,5 = sourde),
  * t60 = durée de la note, dur = dureté du pincement (0 = doigt doux, 1 = médiator),
@@ -71,18 +71,14 @@ export function rendreCorde(freq, sr, p, graine = 1){
 
 /* ================= contexte et circuits ================= */
 let ctx = null, master = null, reverbEnvoi = null;
-const circuits = {};                 // un circuit par timbre (filtres, ampli)
-const tampons = new Map();           // notes calculées
+const circuits = {};                 // un circuit par timbre (égaliseur, sortie, salle)
+const tampons = new Map();           // notes de synthèse (secours)
 let saturee = true;                  // guitare électrique : son saturé ou clair
-const couches = { accords:1, basse:1 };   // gains des deux couches d'accompagnement
+const couches = { accords:1, basse:1, melodie:1, batterie:1, libre:1 };
+const sorties = {};                  // un gain par couche, pour régler et couper en douceur
 
 export function ctxAudio(){ return ctx; }
 
-function courbeSaturation(k){
-  const c = new Float32Array(4096);
-  for (let i = 0; i < c.length; i++){ const x = i / 2048 - 1; c[i] = Math.tanh(k * x) / Math.tanh(k); }
-  return c;
-}
 function filtre(type, f, q = 0.707, gain = 0){
   const b = ctx.createBiquadFilter();
   b.type = type; b.frequency.value = f; b.Q.value = q; b.gain.value = gain;
@@ -106,64 +102,83 @@ export function initAudio(){
   master.gain.value = 1;
   // compresseur doux, remontée du niveau, puis limiteur : fort sans saturer sur un téléphone
   const comp = ctx.createDynamicsCompressor();
-  comp.threshold.value = -20; comp.knee.value = 12; comp.ratio.value = 3; comp.attack.value = 0.006; comp.release.value = 0.2;
+  comp.threshold.value = -18; comp.knee.value = 10; comp.ratio.value = 3; comp.attack.value = 0.005; comp.release.value = 0.15;
   const remontee = ctx.createGain(); remontee.gain.value = 1.5;
   const limiteur = ctx.createDynamicsCompressor();
   limiteur.threshold.value = -1.5; limiteur.knee.value = 0; limiteur.ratio.value = 20; limiteur.attack.value = 0.001; limiteur.release.value = 0.08;
   master.connect(comp).connect(remontee).connect(limiteur).connect(ctx.destination);
-
-  // un peu de salle, partagée
+  // une petite pièce, partagée
   const conv = ctx.createConvolver();
-  conv.buffer = reponseReverb(1.3, 2.6);
-  const retour = ctx.createGain(); retour.gain.value = 0.22;
-  reverbEnvoi = ctx.createGain(); reverbEnvoi.gain.value = 1;
+  conv.buffer = reponseReverb(1.1, 3);
+  const retour = ctx.createGain(); retour.gain.value = 0.16;
+  reverbEnvoi = ctx.createGain();
   reverbEnvoi.connect(conv).connect(retour).connect(master);
+  for (const c of Object.keys(couches)){
+    sorties[c] = ctx.createGain();
+    sorties[c].gain.value = couches[c];
+    sorties[c].connect(master);
+  }
+  chargerBanques();
   return ctx;
 }
 
-/* circuit d'un timbre : entrée → filtres → sortie vers master (et un peu de salle) */
-function circuit(timbre){
-  const cle = timbre === 'elec' ? 'elec' + (saturee ? '-sat' : '-clair') : timbre;
+/* Basse audible sur un haut-parleur de téléphone : on ajoute en parallèle les harmoniques
+ * du grave (l'oreille reconstitue la fondamentale qu'elle n'entend pas), comme la grosse
+ * caisse de Ma Batterie. */
+function chaineGrave(entree, somme){
+  const courbe = new Float32Array(2049);
+  for (let i = 0; i < courbe.length; i++) courbe[i] = Math.tanh(6 * (i / 1024 - 1));
+  const sat = ctx.createWaveShaper(); sat.curve = courbe;
+  const dosage = ctx.createGain(); dosage.gain.value = 0.28;
+  entree.connect(filtre('lowpass', 160, 0.7)).connect(sat).connect(filtre('highpass', 240, 0.7))
+    .connect(filtre('lowpass', 1400, 0.7)).connect(dosage).connect(somme);
+}
+
+/* circuit d'un timbre dans une couche : entrée → égaliseur → sortie de la couche (+ un peu de salle) */
+function circuit(timbre, couche){
+  const cle = timbre + '|' + couche;
   if (circuits[cle]) return circuits[cle];
   const entree = ctx.createGain();
   let fin = entree;
   const enchainer = n => { fin.connect(n); fin = n; return n; };
-  let salle = 0.25, niveau = 1;
+  let salle = 0.22, niveau = 1;
   switch (timbre){
-    case 'nylon':
-      enchainer(filtre('highpass', 70)); enchainer(filtre('peaking', 210, 1.1, 4)); enchainer(filtre('lowpass', 4200)); niveau = 1.0; break;
-    case 'acier':
-      enchainer(filtre('highpass', 80)); enchainer(filtre('peaking', 140, 1, 3)); enchainer(filtre('peaking', 3000, 0.8, 2)); enchainer(filtre('lowpass', 7500)); niveau = 0.95; break;
-    case 'elec':
-      if (saturee){
-        enchainer(filtre('highpass', 120));
-        const pre = ctx.createGain(); pre.gain.value = 9; enchainer(pre);
-        const ws = ctx.createWaveShaper(); ws.curve = courbeSaturation(7); ws.oversample = '4x'; enchainer(ws);
-        enchainer(filtre('peaking', 900, 0.9, 4));      // médium de l'ampli
-        enchainer(filtre('lowpass', 3600, 0.8));         // haut-parleur : coupe les aigus durs
-        enchainer(filtre('lowshelf', 160, 0.7, 3));
-        niveau = 0.34; salle = 0.12;
-      } else {
-        enchainer(filtre('highpass', 85)); enchainer(filtre('peaking', 2400, 0.9, 3)); enchainer(filtre('lowpass', 5200)); niveau = 0.95; salle = 0.3;
-      }
+    case 'nylon': enchainer(filtre('highpass', 70)); enchainer(filtre('peaking', 180, 1, 2)); break;
+    case 'uke':   enchainer(filtre('highpass', 190)); enchainer(filtre('peaking', 2600, 0.8, 3)); niveau = 1.05; break;
+    case 'elec':  enchainer(filtre('highpass', 80)); salle = 0.26; break;
+    case 'sat':   enchainer(filtre('highpass', 90)); enchainer(filtre('lowpass', 7000)); salle = 0.14; niveau = 0.9; break;
+    case 'basse': {
+      enchainer(filtre('highpass', 30));
+      const somme = ctx.createGain();
+      fin.connect(somme);
+      chaineGrave(fin, somme);
+      fin = somme;
+      salle = 0.03; niveau = 1.1;
       break;
-    case 'basse':
-      enchainer(filtre('highpass', 32)); enchainer(filtre('peaking', 90, 1, 3)); enchainer(filtre('lowpass', 1800, 0.8)); niveau = 1.15; salle = 0.04; break;
-    case 'uke':
-      enchainer(filtre('highpass', 160)); enchainer(filtre('peaking', 600, 1.2, 3)); enchainer(filtre('lowpass', 6000)); niveau = 1.0; break;
-    default:
-      enchainer(filtre('lowpass', 6000));
+    }
+    default: salle = 0.1;
   }
   const sortie = ctx.createGain(); sortie.gain.value = niveau;
-  fin.connect(sortie); sortie.connect(master);
+  fin.connect(sortie);
+  sortie.connect(sorties[couche] || master);
   const send = ctx.createGain(); send.gain.value = salle;
-  sortie.connect(send); send.connect(reverbEnvoi);
+  sortie.connect(send); send.connect(sorties[couche] ? envoiSalle(couche) : reverbEnvoi);
   circuits[cle] = { entree, sortie };
   return circuits[cle];
 }
+/* la salle suit le volume de la couche : couper la couche coupe aussi sa réverbération */
+const envois = {};
+function envoiSalle(couche){
+  if (!envois[couche]){ envois[couche] = ctx.createGain(); envois[couche].connect(reverbEnvoi); }
+  return envois[couche];
+}
 
 export function setSaturation(oui){ saturee = oui; }
-export function setCouche(nom, v){ couches[nom] = v; }
+export function setCouche(nom, v){
+  couches[nom] = v;
+  if (sorties[nom]) sorties[nom].gain.setTargetAtTime(v, ctx.currentTime, 0.02);
+  if (envois[nom]) envois[nom].gain.setTargetAtTime(v, ctx.currentTime, 0.02);
+}
 export function setMasterVolume(v){ if (master) master.gain.value = v; }
 
 export async function reprendreAudio(){
@@ -174,14 +189,82 @@ export async function reprendreAudio(){
   return ctx;
 }
 
+/* ================= enregistrements ================= */
+const banques = {};         // nylon, elec, sat, basse → [{ midi, buf, debut }] triés
+const batterie = {};        // GC, CC, CH, CHO → { gain, couches:{ nom:[{ buf, debut }] } }
+let banquesPretes = false;
+export const sonsPrets = () => banquesPretes;
+
+function decoderMp3(b64){
+  const bin = atob(b64);
+  const octets = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) octets[i] = bin.charCodeAt(i);
+  return new Promise((ok, ko) => {
+    const p = ctx.decodeAudioData(octets.buffer, ok, ko);
+    if (p && p.catch) p.catch(ko);
+  });
+}
+/* Niveau de chaque note : dans la banque d'origine, les notes aiguës sont jusqu'à 4 fois plus
+ * faibles que les graves. On mesure chaque enregistrement (première demi-seconde après
+ * l'attaque) et on le ramène vers un niveau commun, en gardant un peu de sa couleur. */
+const NIVEAU_CIBLE = 0.06;
+function egaliser(buf, debut){
+  const d = buf.getChannelData(0), i0 = Math.floor(debut * buf.sampleRate), n = Math.min(d.length - i0, Math.floor(buf.sampleRate * 0.5));
+  let e = 0;
+  for (let i = 0; i < n; i++) e += d[i0 + i] * d[i0 + i];
+  const rms = Math.sqrt(e / Math.max(1, n)) || NIVEAU_CIBLE;
+  return Math.min(4, Math.max(0.4, Math.pow(NIVEAU_CIBLE / rms, 0.85)));
+}
+/* équilibre entre instruments, une fois les notes égalisées (le son saturé paraît plus fort) */
+const BALANCE = { nylon:1.5, elec:0.95, sat:0.72, basse:0.95 };
+/* début réel de l'attaque : le décodeur MP3 ajoute un peu de silence au début */
+function debutAttaque(buf){
+  const d = buf.getChannelData(0);
+  let pic = 0;
+  for (let i = 0; i < d.length; i++){ const a = Math.abs(d[i]); if (a > pic) pic = a; }
+  const seuil = pic * 0.04;
+  for (let i = 0; i < d.length; i++) if (Math.abs(d[i]) > seuil) return Math.max(0, i / buf.sampleRate - 0.002);
+  return 0;
+}
+async function chargerBanques(){
+  try {
+    const taches = [];
+    for (const [id, def] of Object.entries(SONS_CORDES)){
+      banques[id] = [];
+      for (const [midi, b64] of Object.entries(def.notes))
+        taches.push(decoderMp3(b64).then(buf => {
+          const debut = debutAttaque(buf);
+          banques[id].push({ midi:+midi, buf, debut, gain:(BALANCE[id] ?? 1) * egaliser(buf, debut) });
+        }));
+    }
+    for (const [el, def] of Object.entries(SONS_BATTERIE)){
+      batterie[el] = { gain:def.gain, couches:{} };
+      for (const s of def.sons)
+        taches.push(decoderMp3(s.mp3).then(buf => (batterie[el].couches[s.couche] ||= []).push({ buf, debut:debutAttaque(buf) })));
+    }
+    await Promise.all(taches);
+    for (const l of Object.values(banques)) l.sort((a, b) => a.midi - b.midi);
+    banquesPretes = true;
+  } catch {
+    banquesPretes = false;          // décodage impossible : la synthèse reste utilisée
+  }
+}
+/* enregistrement le plus proche de la note voulue */
+function prise(banque, midi){
+  const l = banques[banque];
+  if (!l || !l.length) return null;
+  let best = l[0];
+  for (const e of l) if (Math.abs(e.midi - midi) < Math.abs(best.midi - midi)) best = e;
+  return best;
+}
+
 /* ================= notes ================= */
-const VARIANTES = 2;
-function tampon(timbre, midi, variante){
-  const cle = timbre + midi + '/' + variante;
+function tamponSynthese(timbre, midi){
+  const t = TIMBRES[timbre] ? timbre : timbre === 'sat' ? 'elec' : 'nylon';
+  const cle = t + midi;
   let b = tampons.get(cle);
   if (b) return b;
-  const modele = TIMBRES[timbre === 'elec' ? 'elec' : timbre];
-  const donnees = rendreCorde(midiEnFreq(midi), ctx.sampleRate, modele, midi * 31 + variante * 977 + 7);
+  const donnees = rendreCorde(midiEnFreq(midi), ctx.sampleRate, TIMBRES[t], midi * 31 + 7);
   b = ctx.createBuffer(1, donnees.length, ctx.sampleRate);
   b.copyToChannel(donnees, 0);
   tampons.set(cle, b);
@@ -189,7 +272,7 @@ function tampon(timbre, midi, variante){
 }
 
 /* voix en cours, par couche : on étouffe l'accord précédent quand un nouveau arrive */
-const voix = { accords:[], basse:[], libre:[] };
+const voix = { accords:[], basse:[], melodie:[], libre:[] };
 export function etouffer(couche, t, fondu = 0.03){
   for (const v of voix[couche] || []){
     try {
@@ -204,51 +287,113 @@ export function etouffer(couche, t, fondu = 0.03){
 export function etoufferTout(t = 0){
   if (!ctx) return;
   const maintenant = Math.max(t, ctx.currentTime);
-  etouffer('accords', maintenant, 0.06); etouffer('basse', maintenant, 0.06); etouffer('libre', maintenant, 0.06);
+  for (const c of Object.keys(voix)) etouffer(c, maintenant, 0.06);
 }
 
-/* Joue une note. opt : { couche, velo, timbre (force un timbre), etouffe (chuck), duree (s), pan } */
+/* Joue une note. instTimbre : 'nylon', 'uke', 'elec', 'basse'.
+ * opt : { couche, velo, etouffe (coup étouffé), pm (palm mute), bend (demi-tons), duree (s), pan } */
 export function note(instTimbre, midi, t, opt = {}){
   if (!ctx) return;
-  const timbre = opt.etouffe ? 'etouffe' : instTimbre;
-  const circ = circuit(instTimbre === 'etouffe' ? 'nylon' : instTimbre);
+  const timbre = instTimbre === 'elec' && saturee ? 'sat' : instTimbre === 'clair' ? 'elec' : instTimbre;
+  const banque = timbre === 'uke' ? 'nylon' : timbre;
   const couche = opt.couche || 'libre';
+  const circ = circuit(timbre, couche);
+  const p = banquesPretes ? prise(banque, midi) : null;
   const src = ctx.createBufferSource();
-  src.buffer = tampon(timbre, midi, Math.floor(Math.random() * VARIANTES));
-  src.playbackRate.value = 1 + (Math.random() - 0.5) * 0.0015;
+  let rate = 1, debut = 0, niveau = 0.5;
+  if (p){
+    src.buffer = p.buf; debut = p.debut; niveau = 0.5 * p.gain;
+    rate = Math.pow(2, (midi - p.midi) / 12);
+  } else {
+    src.buffer = tamponSynthese(timbre, midi);
+  }
+  rate *= 1 + (Math.random() - 0.5) * 0.002;          // deux notes ne sont jamais identiques
+  src.playbackRate.setValueAtTime(rate, t);
+  if (opt.bend){
+    src.playbackRate.setValueAtTime(rate, t + 0.06);
+    src.playbackRate.linearRampToValueAtTime(rate * Math.pow(2, opt.bend / 12), t + 0.22);
+  }
   const g = ctx.createGain();
-  const velo = (opt.velo ?? 0.8) * (1 + (Math.random() - 0.5) * 0.12) * (couches[couche] ?? 1);
-  g.gain.value = velo * 0.5;
+  let arret = 0;                                      // instant où la note s'arrête (0 : quand elle s'éteint)
+  const velo = (opt.velo ?? 0.8) * (1 + (Math.random() - 0.5) * 0.1);
+  g.gain.setValueAtTime(velo * niveau, t);
   src.connect(g);
   let sortie = g;
-  if (opt.pan != null && ctx.createStereoPanner){ const p = ctx.createStereoPanner(); p.pan.value = opt.pan; g.connect(p); sortie = p; }
-  sortie.connect(circ.entree);
-  src.start(t);
-  if (opt.duree){   // note tenue seulement un instant (ex. basse courte)
-    g.gain.setValueAtTime(velo * 0.5, t + opt.duree);
-    g.gain.linearRampToValueAtTime(0, t + opt.duree + 0.05);
-    src.stop(t + opt.duree + 0.08);
+  // coup étouffé (chuck) et palm mute : la corde est freinée, les aigus disparaissent
+  if (opt.etouffe || opt.pm){
+    const lp = filtre('lowpass', opt.etouffe ? 1800 : 1100, 0.7);
+    g.connect(lp); sortie = lp;
+    g.gain.setTargetAtTime(0, t + (opt.etouffe ? 0.012 : 0.05), opt.etouffe ? 0.018 : 0.07);
+    arret = t + (opt.etouffe ? 0.2 : 0.6);
+  } else if (timbre === 'uke'){
+    // le ukulélé sonne court : la note s'éteint plus vite que celle d'une guitare
+    g.gain.setTargetAtTime(0, t + 0.15, 0.55);
+    arret = t + 3;
   }
+  if (opt.duree){
+    g.gain.setValueAtTime(velo * niveau, t + opt.duree);
+    g.gain.linearRampToValueAtTime(0, t + opt.duree + 0.06);
+    arret = t + opt.duree + 0.1;
+  }
+  if (opt.pan != null && ctx.createStereoPanner){ const pn = ctx.createStereoPanner(); pn.pan.value = opt.pan; sortie.connect(pn); sortie = pn; }
+  sortie.connect(circ.entree);
+  src.start(t, debut);
+  if (arret) src.stop(arret);
   const v = { src, gain:g };
   (voix[couche] ||= []).push(v);
   src.onended = () => { const l = voix[couche]; const i = l.indexOf(v); if (i >= 0) l.splice(i, 1); };
   return v;
 }
 
-/* Coup de médiator / de doigts sur plusieurs cordes : les cordes partent l'une après l'autre.
- * sens 'D' (vers le bas : du grave à l'aigu), 'U' (vers le haut : de l'aigu au grave, peu de cordes). */
-export function gratter(inst, notes, t, { sens = 'D', velo = 0.8, couche = 'accords', etouffe = false, vitesse = 0.011, nbMax = 6 } = {}){
+/* Coup de médiator ou de doigts sur plusieurs cordes : les cordes partent l'une après l'autre.
+ * sens 'D' (vers le bas : grave → aigu), 'U' (vers le haut : aigu → grave, moins de cordes),
+ * 'd' (petit coup sur les cordes graves). */
+export function gratter(inst, notes, t, { sens = 'D', velo = 0.8, couche = 'accords', etouffe = false, pm = false, vitesse = 0.012, nbMax = 6 } = {}){
   if (!ctx || !notes.length) return;
-  let liste = sens === 'D' ? [...notes] : [...notes].reverse();
+  let liste = sens === 'U' ? [...notes].reverse() : [...notes];
   if (sens === 'U') liste = liste.slice(0, Math.min(liste.length, Math.max(3, Math.ceil(notes.length * 0.6))));
   if (sens === 'd') liste = liste.slice(0, Math.min(liste.length, 4));
+  if (pm) liste = liste.slice(0, Math.min(liste.length, 3));
   liste = liste.slice(0, nbMax);
-  const ordre = sens === 'D' || sens === 'd' ? 1 : -1;
+  const pas = inst.famille === 'ukulele' ? vitesse * 0.8 : vitesse;
   liste.forEach((m, i) => {
-    const hum = (Math.random() - 0.5) * 0.002;
-    const force = velo * (sens === 'U' ? 0.62 : 1) * (0.92 + 0.08 * (i / Math.max(1, liste.length - 1)) * ordre * 0 + 0.06 * (1 - i / liste.length));
-    note(inst.timbre, m, t + i * vitesse + hum, { couche, velo:force, etouffe });
+    const hum = (Math.random() - 0.5) * 0.003;
+    const force = velo * (sens === 'U' ? 0.7 : 1) * (1 - 0.05 * i / liste.length);
+    note(inst.timbre, m, t + i * pas + hum, { couche, velo:force, etouffe, pm });
   });
+}
+
+/* ================= batterie ================= */
+const PAN_BATTERIE = { GC:0, CC:-0.05, CH:-0.3, CHO:-0.3 };
+let charleyOuvert = null;
+export function frapper(el, t, velo = 0.85){
+  if (!ctx || !banquesPretes || !batterie[el]) return;
+  const b = batterie[el];
+  const nom = el === 'GC' ? (velo >= 0.8 ? 'fort' : 'moyen')
+    : el === 'CHO' ? 'moyen'
+    : velo < 0.45 ? 'ghost' : velo >= 0.97 ? 'fort' : 'moyen';
+  const liste = b.couches[nom] || b.couches.moyen || Object.values(b.couches)[0];
+  if (!liste || !liste.length) return;
+  const e = liste[Math.floor(Math.random() * liste.length)];
+  const src = ctx.createBufferSource();
+  src.buffer = e.buf;
+  src.playbackRate.value = 1 + (Math.random() - 0.5) * 0.01;
+  const g = ctx.createGain();
+  // la couche « fort » du charleston est enregistrée beaucoup plus fort : on la ramène
+  const f = el === 'CH' && nom === 'fort' ? 0.3 : el === 'CH' || el === 'CC' ? Math.min(1.2, velo / 0.85) : 1;
+  g.gain.value = b.gain * f * 1.3 * (1 + (Math.random() - 0.5) * 0.08);
+  let fin = g;
+  if (ctx.createStereoPanner){ const pn = ctx.createStereoPanner(); pn.pan.value = PAN_BATTERIE[el] ?? 0; g.connect(pn); fin = pn; }
+  if (el === 'GC'){ const eq = filtre('peaking', 3000, 0.9, 8); fin.connect(eq); fin = eq; }
+  src.connect(g);
+  fin.connect(sorties.batterie || master);
+  // un coup de charleston fermé étouffe le charleston ouvert
+  if (el === 'CH' && charleyOuvert && charleyOuvert.t < t){
+    try { charleyOuvert.g.gain.setTargetAtTime(0, t, 0.015); charleyOuvert.src.stop(t + 0.12); } catch { /* fini */ }
+    charleyOuvert = null;
+  }
+  if (el === 'CHO') charleyOuvert = { src, g, t };
+  src.start(t, e.debut);
 }
 
 /* ================= métronome et références ================= */
@@ -270,29 +415,12 @@ export function clic(t, niveau = 1){
   o.start(t); o.stop(t + 0.09);
 }
 
-/* Note de référence de l'accordeur : un son tenu (sinusoïde + un peu d'harmoniques) */
-let tenue = null;
-export function jouerReference(midi, duree = 2.2){
+/* Note de référence de l'accordeur : la corde elle-même (enregistrée), jouée deux fois */
+export function jouerReference(midi, timbre = 'nylon'){
   if (!ctx) return;
-  arreterReference();
-  const f = midiEnFreq(midi), t = ctx.currentTime;
-  const g = ctx.createGain();
-  g.gain.setValueAtTime(0.0001, t);
-  g.gain.linearRampToValueAtTime(0.35, t + 0.03);
-  g.gain.setValueAtTime(0.35, t + duree - 0.25);
-  g.gain.linearRampToValueAtTime(0.0001, t + duree);
-  const oscs = [[1, 1], [2, 0.35], [3, 0.12]].map(([k, a]) => {
-    const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f * k;
-    const ga = ctx.createGain(); ga.gain.value = a;
-    o.connect(ga).connect(g); o.start(t); o.stop(t + duree + 0.05);
-    return o;
-  });
-  // le grave de la basse passe mal sur un téléphone : on ajoute son octave un peu plus fort
-  g.connect(master);
-  tenue = { g, oscs };
+  etouffer('libre', ctx.currentTime, 0.03);
+  const t = ctx.currentTime + 0.02;
+  note(timbre, midi, t, { velo:0.95 });
+  note(timbre, midi, t + 1.6, { velo:0.8 });
 }
-export function arreterReference(){
-  if (!ctx || !tenue) return;
-  try { tenue.g.gain.cancelScheduledValues(ctx.currentTime); tenue.g.gain.setTargetAtTime(0, ctx.currentTime, 0.02); tenue.oscs.forEach(o => o.stop(ctx.currentTime + 0.1)); } catch { /* fini */ }
-  tenue = null;
-}
+export function arreterReference(){ if (ctx) etouffer('libre', ctx.currentTime, 0.05); }

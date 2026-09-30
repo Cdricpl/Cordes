@@ -12,49 +12,51 @@ dans un navigateur récent (ou publie le dossier `site/`, voir plus bas).
 
 ## Ce que contient l'application
 
-### 🎛 Quatre instruments
-On choisit son instrument en haut de l'accueil (ou dans les réglages du lecteur) :
-tout s'adapte — schémas d'accords, sons, accordeur, parcours.
+### 🎛 Quatre instruments, quatre méthodes
+On choisit son instrument en haut de l'accueil : chaque instrument a **son propre parcours**,
+pensé pour lui, et tout s'adapte (schémas, sons, rythmiques, accordeur).
 
-| Instrument | Cordes | Son |
-|---|---|---|
-| Guitare électrique | Mi La Ré Sol Si Mi | clair ou saturé (ampli simulé), power chords |
-| Guitare classique | Mi La Ré Sol Si Mi | nylon, doux et boisé |
-| Basse | Mi La Ré Sol | grave et rond ; l'appli joue les accords, tu joues la basse |
-| Ukulélé | Sol Do Mi La | nylon aigu et vif |
+| Instrument | Méthode (4 niveaux) |
+|---|---|
+| **Guitare électrique** — 20 leçons | médiator et cordes à vide, un doigt par case, premier riff, power chords fixes puis mobiles · accords ouverts, palm mute, rythmique rock, boogie blues en shuffle, blues 12 mesures · pentatonique mineure, phrases, bends et vibrato, improvisation · barrés, funk, arpèges en son clair, gamme majeure, jouer avec le groupe |
+| **Guitare classique** — 19 leçons | posture, pouce sur les basses, alternance i-m, premières notes, *Au clair de la lune*, *Ode à la joie* · arpèges p-i-m-i et p-i-m-a, valse, début de la *Romance anonyme*, 6/8 · gamme de Do, liaisons (hammer-on / pull-off), mélodie et basse ensemble, triolets, barré · picking alterné, cadence andalouse, septièmes |
+| **Basse** — 19 leçons | doigts alternés, cordes à vide, un doigt par case, fondamentales avec la batterie · quinte, octave (disco), grille pop, country, syncopes · notes du manche, gamme majeure, arpèges, boogie blues · walking bass, reggae, notes étouffées (funk), slap |
+| **Ukulélé** — 18 leçons | accordage Sol-Do-Mi-La, Do à un doigt, La mineur, Fa, Sol 7, bas-haut · island strum, chuck, valse, Ré et Mi mineur, reggae · mélodies (*Au clair de la lune*, *Ode à la joie*), picking p-i-m-a, arpège en valse · blues en shuffle, barré de si bémol, jouer avec le groupe |
 
-Les sons sont **calculés en direct** (cordes pincées, algorithme de Karplus-Strong) : rien
-à télécharger, l'appli marche hors ligne.
+### 🎼 Tablatures qui défilent
+Les exercices (riffs, gammes, arpèges, lignes de basse, mélodies) sont écrits en
+**tablature** : une ligne par corde, le numéro de la case à jouer. Pendant la lecture, la
+note jouée s'allume dans la tablature **et sur un manche dessiné à côté**, qui montre où poser
+les doigts. L'appli joue l'exercice avec le vrai son de l'instrument : on écoute, puis on coupe
+l'exercice (bouton « note ») pour le jouer seul, avec la basse et la batterie derrière.
+Toucher une mesure la fait entendre.
+
+### 🔊 De vrais sons
+- Guitare classique, guitare électrique (claire ou saturée), basse, ukulélé : **notes
+  enregistrées** (banque *FluidR3 GM*, licence CC BY 3.0), égalisées note par note.
+- **Batterie** d'accompagnement : les enregistrements de Ma Batterie (*Virtuosity Drums*, CC0),
+  avec un rythme propre à chaque style (rock, disco, reggae one drop, shuffle…).
+- Tout est intégré au fichier : l'appli marche hors ligne.
 
 ### ▶️ Le lecteur
-Les grilles d'accords défilent en rythme : la mesure en cours s'allume, le **schéma de
-l'accord actuel et du suivant** s'affichent à droite, et la barre **main droite** montre le
-grattage (↓ ↑) ou l'arpège (p i m a), pas à pas.
+Grille d'accords qui défile, schéma de l'accord actuel et du suivant, barre **main droite**
+qui s'allume à chaque coup (↓ ↑, palm mute, coups étouffés, arpège p-i-m-a). À la basse,
+cette barre montre la **ligne de basse** (fondamentale, quinte, octave…) avec le nom des notes
+pour l'accord en cours. Boutons : métronome, accords, exercice, batterie, basse. Réglages :
+rythmique, grattage ou arpège, transposition, capodastre, power chords, son saturé, solfège,
+volumes. Un clic sur une section la joue seule, en boucle.
 
-Réglages : rythmique (noires, croches, folk, pop, ballade, rock, reggae, country, valse,
-6/8, 12/8, shuffle, arpège…), grattage ou arpège, **transposition**, **capodastre**, power
-chords, son saturé, noms en solfège (Do Ré Mi), volume des accords et de la basse,
-décompte, boucle, métronome. Un clic sur une section la joue seule, en boucle.
-
-### 📚 Parcours — 24 leçons en 4 niveaux
-Premiers pas (accorder, premier accord, changer d'accord, gratter), les chansons (grille
-pop, mineurs, valse, arpèges, capodastre), le groove (reggae, basse alternée, blues,
-power chords, barré, 6/8), aller plus loin (septièmes, II–V–I, arpège classique, cadence
-andalouse, composer son accompagnement). Quand un accord est trop dur sur un instrument,
-la leçon propose une grille adaptée.
-
-### 🎼 Accords, 🥁 Rythmiques, 🎚 Accordeur, ✏️ Atelier
-- **Accords** : bibliothèque de schémas à toucher pour les entendre (essentiels, majeurs,
-  mineurs, septièmes, sus/add9/6, power chords). À la basse : fondamentale, tierce, quinte
-  et octave sur le manche.
-- **Rythmiques** : chaque façon de gratter, jouée sur une grille de démonstration.
-- **Accordeur** : au micro, corde par corde, avec l'aiguille et le conseil « serre / desserre » ;
-  on peut aussi écouter la note juste de chaque corde.
+### 🥁 Rythmiques, 🎸 Accords, 🎚 Accordeur, ✏️ Atelier
+- **Rythmiques** (guitare, ukulélé), **Main droite** (classique), **Grooves** (basse) : les
+  styles adaptés à l'instrument choisi, avec batterie.
+- **Accords** : schémas à toucher pour les entendre ; à la basse, **Arpèges** (fondamentale,
+  tierce, quinte, octave sur le manche).
+- **Accordeur** au micro, corde par corde ; on peut aussi écouter chaque corde juste.
 - **Atelier** : écris ta propre grille (`Couplet: C | G | Am | F`), choisis la mesure, la
   rythmique et le tempo, et joue par-dessus.
 
-La **progression** (minutes par jour, jours d'affilée, leçons, éléments « à travailler » et
-« acquis ») est enregistrée dans le navigateur.
+La **progression** (minutes par jour, jours d'affilée, leçons de chaque instrument, éléments
+« à travailler » et « acquis ») est enregistrée dans le navigateur.
 
 ---
 
@@ -67,18 +69,21 @@ css/cordes.css      ce qui est propre aux cordes
 js/theorie.js       notes, accords, transposition
 js/instruments.js   les 4 instruments (accordage, couleurs)
 js/accords.js       doigtés : formes ouvertes, barrés, solveur
-js/audio.js         synthèse des cordes, ampli, métronome
-js/rythmes.js       rythmiques et compilation des grilles
+js/sons.js          notes enregistrées (généré par outils/preparer_sons.mjs)
+js/audio.js         lecture des enregistrements, batterie, métronome
+js/rythmes.js       rythmiques (grattage, arpège, basse, batterie), tablatures, grilles
 js/player.js        lecteur (planification audio précise)
 js/hauteur.js       détection de hauteur (accordeur)
-js/lessons.js       parcours
+js/lessons.js       les quatre parcours
 js/diagrammes.js    schémas SVG  js/app.js       interface
 ```
 
 - `node build.js` → `mes-cordes.html`, un fichier unique autonome.
 - `node build.js --site` → `site/`, installable sur téléphone (manifest, service worker,
   icônes). Netlify l'exécute tout seul (`netlify.toml`).
-- `node outils/verifier.mjs` → vérifie que chaque accord des leçons et des rythmiques a un
-  doigté sur chaque instrument dans les 12 tonalités, que les rythmiques ont la bonne
+- `node outils/preparer_sons.mjs <js/sons.js de Ma Batterie>` → régénère `js/sons.js`
+  (télécharge la banque FluidR3, garde une note tous les 3 demi-tons).
+- `node outils/verifier.mjs` → vérifie chaque tablature (nombre de pas, cordes, cases), que
+  chaque accord des leçons a un doigté sur chaque instrument dans les 12 tonalités, que les rythmiques ont la bonne
   longueur et que l'accordeur retrouve les bonnes notes.
 - À chaque livraison, augmenter `js/version.js`.

@@ -2,7 +2,7 @@
  * sans connexion, tout en prenant TOUJOURS la dernière version quand il y a du réseau.
  * VERSION est réécrit par build.js à partir de js/version.js : une nouvelle version
  * = un nouveau cache, l'ancien est supprimé. */
-const VERSION = 'mes-cordes-1.1.0';
+const VERSION = 'mes-cordes-2.0.0';
 const COQUILLE = [
   './', './index.html', './manifest.webmanifest',
   './icons/icone-192.png', './icons/icone-512.png',

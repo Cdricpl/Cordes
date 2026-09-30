@@ -48,6 +48,34 @@ export function schemaAccord(instId, nom, { puissance = false, titre = true, sol
   return s + '</svg>';
 }
 
+/* Manche de l'exercice (tablature) : même présentation qu'un schéma d'accord, avec toutes les
+ * notes de la section en gris ; la note jouée s'allume (classe « on » sur [data-pos]). */
+export function schemaPositions(instId, positions, { solfege = false } = {}){
+  const inst = INSTRUMENTS[instId];
+  const n = inst.cordes.length;
+  const frettees = positions.filter(p => p.case > 0).map(p => p.case);
+  const mini = frettees.length ? Math.min(...frettees) : 1, maxi = frettees.length ? Math.max(...frettees) : 1;
+  const base = maxi <= 5 ? 1 : mini;
+  const cases = Math.max(4, maxi - base + 1);
+  const ecart = n === 4 ? 24 : 20, hautCase = cases > 5 ? 20 : 24, x0 = 26, y0 = 34;
+  const larg = x0 * 2 + ecart * (n - 1), haut = y0 + hautCase * cases + 22;
+  let s = `<svg class="schema positions" viewBox="0 0 ${larg} ${haut}" role="img" aria-label="Positions sur le manche">`;
+  s += `<text class="sc-nom petit" x="${larg / 2}" y="14" text-anchor="middle">Manche</text>`;
+  if (base === 1) s += `<rect class="sc-sillet" x="${x0 - 2}" y="${y0 - 5}" width="${ecart * (n - 1) + 4}" height="5" rx="1.5"/>`;
+  else s += `<text class="sc-case" x="${x0 - 9}" y="${y0 + hautCase * 0.62}" text-anchor="end">${base}</text>`;
+  for (let k = 0; k <= cases; k++) s += `<line class="sc-frette" x1="${x0}" x2="${x0 + ecart * (n - 1)}" y1="${y0 + k * hautCase}" y2="${y0 + k * hautCase}"/>`;
+  for (let i = 0; i < n; i++) s += `<line class="sc-corde" x1="${x0 + i * ecart}" x2="${x0 + i * ecart}" y1="${y0}" y2="${y0 + cases * hautCase}" stroke-width="${inst.famille === 'ukulele' ? 1.4 : 1 + (n - 1 - i) * 0.3}"/>`;
+  for (const p of positions){
+    const i = n - p.corde, x = x0 + i * ecart;
+    if (i < 0 || i >= n) continue;
+    if (p.case === 0) s += `<circle class="sc-pos vide" data-pos="${p.corde}.0" cx="${x}" cy="${y0 - 13}" r="6"/>`;
+    else if (p.case >= base && p.case < base + cases)
+      s += `<circle class="sc-pos" data-pos="${p.corde}.${p.case}" cx="${x}" cy="${y0 + (p.case - base + 0.5) * hautCase}" r="${n === 4 ? 9 : 8}"/>`;
+  }
+  inst.lettres.forEach((l, i) => { s += `<text class="sc-lettre" x="${x0 + i * ecart}" y="${haut - 5}" text-anchor="middle">${solfege ? nomClasse(inst.cordes[i], true) : l}</text>`; });
+  return s + '</svg>';
+}
+
 /* Basse : un morceau de manche horizontal (cases 0 à 7) avec fondamentale, tierce, quinte, octave */
 export function schemaBasse(instId, nom, { titre = true, solfege = false } = {}){
   const inst = INSTRUMENTS[instId];

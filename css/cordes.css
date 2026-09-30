@@ -168,3 +168,30 @@
   .accueil-grille.cordes .carte-cat.grande h2{font-size:30px}
   .accueil-grille.cordes .cta{font-size:14px;padding:10px 16px}
 }
+
+/* ====== tablature ====== */
+.g-mesures.tabs{grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.g-mesure.tab{padding:6px 10px 16px;min-height:0}
+.g-mesure.tab .g-accords b{font-size:17px}
+.t-grille{position:relative;display:grid;grid-template-columns:repeat(var(--pas),1fr);grid-template-rows:repeat(var(--cordes),17px);margin-top:2px}
+.t-corde{grid-column:1 / -1;align-self:center;height:1.5px;background:#c3c8d2}
+.t-n{align-self:center;justify-self:center;z-index:1;padding:1px 3px;border-radius:6px;background:var(--surface);
+  font:700 14px/1 var(--f-chiffres);color:var(--encre);transition:background .06s,color .06s}
+.t-n sup{font-size:9px;margin-left:1px;color:var(--ton-texte)}
+.t-n.on{background:var(--ton-2);color:#fff}
+.t-n.on sup{color:#fff}
+.t-curseur{position:absolute;top:-3px;bottom:-3px;left:var(--prog,0%);width:2px;border-radius:1px;background:var(--ton-2);opacity:0;pointer-events:none}
+.g-mesure.tab.actif .t-curseur{opacity:.45}
+.g-temps.t-temps{display:grid;grid-template-columns:repeat(var(--pas),1fr);gap:4px}
+.g-temps.t-temps i{grid-row:1}
+.g-mesure.tab .g-prog{display:none}
+.en-tab .g-mesure.actif{background:#fffafb}
+.schema .sc-nom.petit{font:800 12px var(--f-titre);letter-spacing:.14em;text-transform:uppercase;fill:var(--ton-texte)}
+.schema .sc-pos{fill:#d4d9e2;transition:fill .06s}
+.schema .sc-pos.vide{fill:none;stroke:#b7bcc7;stroke-width:1.8}
+.schema .sc-pos.on{fill:var(--ton-2)}
+.schema .sc-pos.vide.on{fill:none;stroke:var(--ton-2);stroke-width:3}
+/* basse : sous chaque signe de la ligne, le nom de la note */
+.main-droite small{display:block;font:700 10px/1.2 var(--f-chiffres);color:var(--ton-texte);min-height:12px}
+.main-droite .rv-case.on small{color:#fff}
+.main-droite:not(.basse) small{display:none}
